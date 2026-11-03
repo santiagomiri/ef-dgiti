@@ -1,7 +1,14 @@
-# Copia al portapapeles, uno por uno, los 3 valores que van en los secretos de
-# GitHub, SIN mostrarlos en pantalla (seguro aunque estes grabando).
+# Copia al portapapeles los valores que van en los secretos de GitHub, SIN
+# mostrarlos en pantalla (seguro aunque estes grabando).
 # Requiere haber guardado antes las credenciales con .\scripts\credenciales.ps1
 # En GitHub: Settings > Secrets and variables > Actions > New repository secret
+#
+# Uso:  .\scripts\copiar-secretos.ps1                          (los 3, uno por uno con Enter)
+#       .\scripts\copiar-secretos.ps1 -Solo AWS_SESSION_TOKEN   (copia solo ese y termina)
+param(
+    [ValidateSet("", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN")]
+    [string]$Solo = ""
+)
 
 $archivo = Join-Path $HOME ".aws\credentials"
 $valores = @{}
@@ -16,13 +23,16 @@ $secretos = [ordered]@{
     "AWS_SECRET_ACCESS_KEY" = "aws_secret_access_key"
     "AWS_SESSION_TOKEN"     = "aws_session_token"
 }
+$nombres = if ($Solo) { @($Solo) } else { @($secretos.Keys) }
 
-foreach ($nombre in $secretos.Keys) {
+foreach ($nombre in $nombres) {
     $valor = $valores[$secretos[$nombre]]
     if (-not $valor) { Write-Host "No se encontro $nombre en $archivo" -ForegroundColor Red; exit 1 }
     Set-Clipboard -Value $valor
-    Write-Host "Copiado el valor de $nombre. Crea/actualiza el secreto '$nombre' en GitHub, pega (Ctrl+V) y guarda." -ForegroundColor Yellow
-    Read-Host "Presiona Enter para continuar" | Out-Null
+    Write-Host "Copiado el valor de $nombre ($($valor.Length) caracteres). En GitHub: pega con Ctrl+V en 'Secret' y guarda." -ForegroundColor Yellow
+    if (-not $Solo) { Read-Host "Presiona Enter para continuar" | Out-Null }
 }
-Set-Clipboard -Value " "
-Write-Host "Listo. Portapapeles limpio." -ForegroundColor Green
+if (-not $Solo) {
+    Set-Clipboard -Value " "
+    Write-Host "Listo. Portapapeles limpio." -ForegroundColor Green
+}
