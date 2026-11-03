@@ -1,0 +1,5 @@
+# Saltos de linea LF en todo el repo: user_data.sh se ejecuta en Linux y
+# falla con CRLF (Windows). Los scripts de PowerShell quedan en CRLF.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.png binary

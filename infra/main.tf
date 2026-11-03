@@ -424,7 +424,8 @@ resource "aws_launch_template" "app" {
   vpc_security_group_ids = [aws_security_group.app.id]
   update_default_version = true
 
-  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+  # replace(): quita los \r si el archivo llego con saltos de linea de Windows
+  user_data = base64encode(replace(templatefile("${path.module}/user_data.sh", {
     repo_url        = var.app_repo_url
     repo_branch     = var.app_repo_branch
     app_port        = var.app_port
@@ -434,7 +435,7 @@ resource "aws_launch_template" "app" {
     db_user         = var.db_username
     db_password     = var.db_password
     app_env         = "aws-${var.aws_region}"
-  }))
+  }), "\r", ""))
 
   dynamic "iam_instance_profile" {
     for_each = var.instance_profile_name != "" ? [1] : []
