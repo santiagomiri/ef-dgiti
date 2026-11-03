@@ -81,9 +81,16 @@ if ($LASTEXITCODE -ne 0 -or -not $url -or $url -notmatch "^http") {
     } catch { Mal "/api/status no responde" }
     $tg = terraform output -raw target_group_arn 2>$null
     if ($tg -and $arn) {
-        $estados = aws elbv2 describe-target-health --target-group-arn $tg --query "TargetHealthDescriptions[].[Target.Id,Target.AvailabilityZone,TargetHealth.State]" --output text 2>$null
-        $sanas = @($estados -split "`n" | Where-Object { $_ -match "healthy$" -and $_ -notmatch "unhealthy" })
-        $zonas = @($sanas | ForEach-Object { ($_ -split "\s+")[1] } | Sort-Object -Unique)
+        # El Target Group no informa la zona de destinos tipo instancia: se consulta en EC2
+        $ids = aws elbv2 describe-target-health --target-group-arn $tg `
+            --query "TargetHealthDescriptions[?TargetHealth.State=='healthy'].Target.Id" --output text 2>$null
+        $sanas = @(($ids -split "\s+") | Where-Object { $_ })
+        $zonas = @()
+        if ($sanas.Count -gt 0) {
+            $zonas = @((aws ec2 describe-instances --instance-ids $sanas `
+                --query "Reservations[].Instances[].Placement.AvailabilityZone" --output text 2>$null) -split "\s+" |
+                Where-Object { $_ } | Sort-Object -Unique)
+        }
         if ($sanas.Count -ge 2 -and $zonas.Count -ge 2) { Ok "Target Group: $($sanas.Count) instancias sanas en $($zonas.Count) zonas ($($zonas -join ', '))" }
         else { Mal "Target Group: $($sanas.Count) instancias sanas en $($zonas.Count) zona(s); se esperan >= 2 en 2 zonas" }
     }
