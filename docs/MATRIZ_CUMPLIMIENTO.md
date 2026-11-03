@@ -25,7 +25,7 @@ minuto del video se evidencia. Ruta de archivos relativa a la raíz del reposito
 
 | Requisito | Implementación | Evidencia en video |
 |---|---|---|
-| Terraform obligatorio | 49 recursos con el proveedor `hashicorp/aws` 5.x | Clip 2 (1:30) |
+| Terraform obligatorio | 45 recursos con el proveedor `hashicorp/aws` 5.x (`terraform state list`) | Clip 2 (1:30) |
 | `provider.tf` | `infra/provider.tf` | Clip 2 |
 | `variables.tf` | `infra/variables.tf` (con validaciones y `sensitive`) | Clip 2 |
 | `main.tf` | `infra/main.tf` (8 secciones comentadas) | Clip 2 |

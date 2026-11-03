@@ -172,14 +172,14 @@ terraform init
 ```powershell
 terraform plan
 ```
-📸 `B4-plan.png` → al final: **Plan: 49 to add, 0 to change, 0 to destroy** (49 con la configuración por defecto; menos si activaste algún plan B).
+📸 `B4-plan.png` → al final: **Plan: 45 to add, 0 to change, 0 to destroy** (45 con la configuración por defecto para el Learner Lab).
 
 ```powershell
 terraform apply
 ```
 Escribe `yes`. **Tarda 20–25 minutos** (la réplica de RDS es lo más lento). No cierres la ventana.
 > 💡 **Graba esta pantalla con Win + Alt + R** (Xbox Game Bar) o OBS desde que escribes `yes` hasta el final:
-> la persona del bloque B la usará acelerada en el video. Al final: **Apply complete! Resources: 49 added** 📸 `B4-apply.png`
+> la persona del bloque B la usará acelerada en el video. Al final: **Apply complete! Resources: 45 added** 📸 `B4-apply.png`
 
 ```powershell
 terraform output
