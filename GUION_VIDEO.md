@@ -136,8 +136,8 @@ variables no sensibles, como el nombre del Auto Scaling Group, están aparte."
 🎙️ "Hace unos minutos hicimos este cambio y el push a main, que disparó el pipeline."
 
 🖥️ (35 s) GitHub → **Actions** → el run → grafo de los 3 jobs en verde → job 1: pasos **Pruebas unitarias**
-(`31 passed`, tabla de cobertura) y **Pruebas de integración** (`3 passed`) → **Summary** con la tabla de pruebas.
-🎙️ "Aquí está la ejecución exitosa. Las 31 pruebas unitarias pasan con 97 % de cobertura: prueban la API y la
+(`32 passed`, tabla de cobertura) y **Pruebas de integración** (`3 passed`) → **Summary** con la tabla de pruebas.
+🎙️ "Aquí está la ejecución exitosa. Las 32 pruebas unitarias pasan con 97 % de cobertura: prueban la API y la
 capa de datos, incluso escenarios de falla como la réplica caída o la base sin conexión. Las 3 pruebas de
 integración corren contra PostgreSQL 16 real: crean y leen datos. Si cualquiera fallara, el despliegue no ocurre."
 

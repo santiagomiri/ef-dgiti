@@ -74,34 +74,31 @@ class FakeConnection:
         self.rollbacks += 1
 
 
-class FakePool:
-    """Imita ThreadedConnectionPool. `broken_hosts` simula una BD caida."""
+class FakeServer:
+    """Reemplaza psycopg2.connect. `broken_hosts` simula una BD caida."""
 
-    broken_hosts: set[str] = set()
-    failing_queries: set[str] = set()
-    instances: list["FakePool"] = []
+    def __init__(self) -> None:
+        self.broken_hosts: set[str] = set()
+        self.failing_queries: set[str] = set()
+        self.connections: list[FakeConnection] = []
 
-    def __init__(self, minconn, maxconn, **kwargs):
-        self.host = kwargs["host"]
-        self.returned: list[tuple[FakeConnection, bool]] = []
-        FakePool.instances.append(self)
+    def connect(self, **kwargs):
+        host = kwargs["host"]
+        if host in self.broken_hosts:
+            raise psycopg2.OperationalError(f"no se pudo conectar a {host}")
+        conn = FakeConnection(host, fail_queries=host in self.failing_queries)
+        self.connections.append(conn)
+        return conn
 
-    def getconn(self):
-        if self.host in FakePool.broken_hosts:
-            raise psycopg2.OperationalError(f"no se pudo conectar a {self.host}")
-        return FakeConnection(self.host, fail_queries=self.host in FakePool.failing_queries)
-
-    def putconn(self, conn, close=False):
-        self.returned.append((conn, close))
+    def opened(self, host: str) -> list[FakeConnection]:
+        return [conn for conn in self.connections if conn.host == host]
 
 
 @pytest.fixture(autouse=True)
 def fake_pool(monkeypatch):
-    FakePool.broken_hosts = set()
-    FakePool.failing_queries = set()
-    FakePool.instances = []
-    monkeypatch.setattr(db_module.pg_pool, "ThreadedConnectionPool", FakePool)
-    return FakePool
+    server = FakeServer()
+    monkeypatch.setattr(db_module.psycopg2, "connect", server.connect)
+    return server
 
 
 def test_sin_host_configurado_lanza_error():
@@ -109,16 +106,25 @@ def test_sin_host_configurado_lanza_error():
         Database(make_settings(db_host="")).create_item("x", "i-1")
 
 
-def test_crear_item_crea_esquema_una_sola_vez():
+def test_crear_item_crea_esquema_una_sola_vez(fake_pool):
     database = Database(make_settings())
     database.create_item("a", "i-1")
     database.create_item("b", "i-1")
-    primary_pool = FakePool.instances[0]
-    assert primary_pool.host == "primaria.local"
     schema_runs = [
-        sql for conn, _ in primary_pool.returned for sql in conn.executed if "CREATE TABLE" in sql
+        sql
+        for conn in fake_pool.opened("primaria.local")
+        for sql in conn.executed
+        if "CREATE TABLE" in sql
     ]
     assert len(schema_runs) == 1
+
+
+def test_el_pool_reutiliza_la_conexion(fake_pool):
+    """Regresion: abrir una conexion por solicitud dispara la latencia en RDS."""
+    database = Database(make_settings())
+    for _ in range(10):
+        database.create_item("x", "i-1")
+    assert len(fake_pool.opened("primaria.local")) == 1
 
 
 def test_listar_lee_de_la_replica():
@@ -147,22 +153,23 @@ def test_check_reporta_error_si_la_bd_esta_caida(fake_pool):
     assert "no se pudo conectar" in result["error"]
 
 
-def test_error_de_consulta_hace_rollback_y_devuelve_la_conexion(fake_pool):
+def test_error_de_consulta_hace_rollback(fake_pool):
     fake_pool.failing_queries = {"primaria.local"}
     database = Database(make_settings())
     with pytest.raises(DatabaseError, match="conexion perdida"):
         database.ensure_schema()
-    conn, _ = FakePool.instances[0].returned[0]
+    conn = fake_pool.opened("primaria.local")[0]
     assert conn.rollbacks == 1
     assert conn.commits == 0
 
 
-def test_conexion_cerrada_se_descarta_del_pool():
-    database = Database(make_settings())
-    with database._pool("primary").connection() as conn:
-        conn.closed = 2
-    _, close = FakePool.instances[0].returned[0]
-    assert close is True
+def test_conexion_cerrada_se_descarta_del_pool(fake_pool):
+    pool = Database(make_settings())._pool("primary")
+    with pool.connection() as conn:
+        conn.closed = 2  # p. ej. RDS se reinicio
+    with pool.connection():
+        pass
+    assert len(fake_pool.opened("primaria.local")) == 2
 
 
 def test_pool_agotado_lanza_error(monkeypatch):

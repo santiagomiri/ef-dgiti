@@ -5,12 +5,12 @@ agotar las conexiones de una db.t3.micro cuando el Auto Scaling agrega
 instancias durante la prueba de carga.
 """
 
+import queue
 import threading
 import time
 from contextlib import contextmanager
 
 import psycopg2
-from psycopg2 import pool as pg_pool
 from psycopg2.extras import RealDictCursor
 
 from app.config import Settings
@@ -54,10 +54,22 @@ def _safe_rollback(conn) -> None:
 
 
 class _Pool:
+    """Pool propio: reutiliza hasta POOL_SIZE conexiones abiertas (LIFO).
+
+    No se usa psycopg2.pool porque con minconn=0 cierra cada conexion al
+    devolverla, y abrir una conexion TLS a RDS por solicitud dispara la latencia.
+    """
+
     def __init__(self, **conn_kwargs) -> None:
-        # minconn=0: no se conecta hasta la primera solicitud.
-        self._pool = pg_pool.ThreadedConnectionPool(0, POOL_SIZE, **conn_kwargs)
+        self._conn_kwargs = conn_kwargs
+        self._idle: queue.LifoQueue = queue.LifoQueue()
         self._slots = threading.BoundedSemaphore(POOL_SIZE)
+
+    def _take(self):
+        try:
+            return self._idle.get_nowait()
+        except queue.Empty:
+            return psycopg2.connect(**self._conn_kwargs)
 
     @contextmanager
     def connection(self):
@@ -65,7 +77,7 @@ class _Pool:
             raise DatabaseError("pool de conexiones agotado")
         try:
             try:
-                conn = self._pool.getconn()
+                conn = self._take()
             except psycopg2.Error as exc:
                 raise DatabaseError(str(exc).strip()) from exc
             try:
@@ -79,7 +91,8 @@ class _Pool:
                 raise
             finally:
                 # Una conexion rota (p. ej. reinicio de RDS) se descarta.
-                self._pool.putconn(conn, close=bool(conn.closed))
+                if not conn.closed:
+                    self._idle.put(conn)
         finally:
             self._slots.release()
 

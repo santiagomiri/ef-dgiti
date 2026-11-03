@@ -10,7 +10,7 @@
 
 ## 0. Qué ya está hecho (y cómo cumple cada requisito)
 
-El proyecto `ef-dgiti/` ya está completo y **verificado localmente**: 31 pruebas pasan (97 % de cobertura),
+El proyecto `ef-dgiti/` ya está completo y **verificado localmente**: 32 pruebas unitarias + 3 de integración contra PostgreSQL 16 real pasan (97,6 % de cobertura),
 `ruff` sin errores, `terraform validate` → *Success*, la API y k6 funcionan.
 
 | Requisito del enunciado | Dónde se cumple |
@@ -166,6 +166,14 @@ Cambia **solo** estas dos líneas, guarda y cierra:
 > `terraform.tfvars` está en `.gitignore`: **nunca** se sube a GitHub. Eso es lo que se explica en el video como
 > "manejo de credenciales sin exponerlas".
 
+### B3.5 Verificación previa (1 min)
+Desde la raíz del repo (`cd ..` si estás en `infra`):
+```powershell
+.\scripts\verificar-todo.ps1
+```
+Las secciones 1 a 5 deben salir en **[OK]** verde (la 6 sale en *AVISO* hasta que despliegues). Si algo sale en
+**[FALLA]**, el mensaje dice exactamente qué corregir. Luego vuelve a `cd infra`.
+
 ### B4. Ciclo Terraform (guarda evidencia de TODO)
 ```powershell
 terraform init
@@ -258,7 +266,7 @@ git commit -m "Version 2 de la pagina de inicio"
 git push
 ```
 GitHub → pestaña **Actions** → el run nuevo. Debe quedar **todo en verde** (📸 de cada job):
-1. **Validación de código y pruebas** (~1 min): abre los pasos *Pruebas unitarias* (31 passed, cobertura) y
+1. **Validación de código y pruebas** (~1 min): abre los pasos *Pruebas unitarias* (32 passed, cobertura) y
    *Pruebas de integración* (3 passed contra PostgreSQL). Abajo, el **resumen** con la tabla de pruebas.
 2. **Validación de infraestructura** (~30 s): fmt, init, validate.
 3. **Despliegue en AWS** (8–12 min): el *instance refresh* reemplaza las instancias de a una (sin caída), y la
@@ -331,22 +339,18 @@ al final se ve la actividad del ASG lanzando el reemplazo. 📸
 
 ---
 
-## Fase E — Diagrama (persona A, ~20 min)
+## Fase E — Diagrama (persona A, ~10 min)
 
-1. Abre <https://app.diagrams.net> → **Abrir desde → Dispositivo** → `docs/arquitectura.drawio`.
-2. Verifica que se ven los iconos (ALB, EC2, RDS, S3, CloudWatch, NAT, IGW...). Son de la librería oficial
-   **AWS** de draw.io (*Más formas → AWS*). Si el profe exige el paquete 2026: en
-   <https://aws.amazon.com/architecture/icons/> descarga el *Asset Package* y reemplaza los iconos que cambien
-   (los nombres y colores actuales son los de la guía oficial).
-3. Cambia `ef-dgiti-vpc` si usaron otro `project_name`. Revisa que nada se superponga.
-4. **Archivo → Exportar como → PNG**, zoom 200 %, fondo blanco → guarda como `docs/arquitectura.png`.
-5. Sube el PNG al repo:
-```powershell
-git add docs/arquitectura.png
-git commit -m "Diagrama de arquitectura en PNG"
-git push
-```
-(Este push vuelve a desplegar; es correcto.)
+**Ya está hecho:** `docs/arquitectura.png` (3409×2163, exportado con draw.io) y el editable `docs/arquitectura.drawio`.
+La persona A solo debe **estudiarlo** para explicarlo (guion, bloque A). Si quieren modificarlo:
+
+1. Ábrelo con **draw.io Desktop** (ya instalado en el PC de Santiago) o en <https://app.diagrams.net>
+   → **Abrir desde → Dispositivo** → `docs/arquitectura.drawio`.
+2. Los iconos son de la librería oficial **AWS** de draw.io (*Más formas → AWS*), basada en los
+   *AWS Architecture Icons*. Si el profe exige expresamente el paquete 2026: en
+   <https://aws.amazon.com/architecture/icons/> descarga el *Asset Package* y reemplaza los iconos que cambien.
+3. **Archivo → Exportar como → PNG**, zoom 200 %, borde 20, fondo blanco → reemplaza `docs/arquitectura.png`,
+   y súbelo con `git add docs ; git commit -m "Diagrama actualizado" ; git push` (vuelve a desplegar; es correcto).
 
 **Lo que muestra el diagrama** (todo lo que exige el enunciado): usuarios, VPC, 6 subredes en 2 AZ, ALB,
 instancias en Auto Scaling Group, 3 Security Groups, RDS primaria + réplica, S3, CloudWatch,
@@ -363,6 +367,7 @@ Alternativa: cada uno graba su bloque con OBS/Xbox Game Bar y se unen en **Clipc
 
 ### F2. Antes de grabar (cada integrante)
 - [ ] Sandbox **iniciado** y con tiempo de sobra (si quedan < 60 min, **Start Lab** de nuevo y repite B2).
+- [ ] `.\scripts\verificar-todo.ps1` termina en **TODO LISTO** (incluye health, réplica, 2 zonas sanas y `plan` sin cambios).
 - [ ] `terraform plan` dice **No changes** (todo sigue desplegado). Si algo cambió, `terraform apply`.
 - [ ] El navegador con las pestañas del guion **ya abiertas** y con sesión iniciada en la consola.
 - [ ] PowerShell con **letra grande** (Ctrl + rueda del mouse) y fondo oscuro; navegador al 125 %.
@@ -475,7 +480,7 @@ versionado en Git, revisable con `plan` antes de cambiar, y se destruye con un c
 **¿Cómo despliega el pipeline sin downtime?** *Instance refresh* con 50 % mínimo saludable: reemplaza de a una
 instancia, espera que la nueva pase el health check y luego sigue. La prueba de humo confirma el commit en todas.
 
-**¿Qué demuestran las pruebas?** Unitarias (31): lógica de la API y de la capa de datos con dobles de prueba
+**¿Qué demuestran las pruebas?** Unitarias (32): lógica de la API y de la capa de datos con dobles de prueba (incluida la reutilización de conexiones)
 (caídas de BD, réplica caída, validaciones, pool agotado, IMDSv2). Integración (3): la API real contra
 PostgreSQL 16 en el runner. Cobertura ≈ 97 %.
 
