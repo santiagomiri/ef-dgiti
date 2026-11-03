@@ -23,4 +23,4 @@ cpu_target           = 50
 # key_name              = "vockey"              # SSH (no es necesario)
 # instance_profile_name = "LabInstanceProfile"  # solo si existe en tu cuenta
 # enable_nat_gateway    = false                 # plan B si el Learner Lab no permite NAT
-# enable_alb_access_logs = false                # plan B si falla el bucket de logs
+# enable_alb_access_logs = true                 # SOLO en una cuenta AWS normal: la SCP del Learner Lab lo bloquea

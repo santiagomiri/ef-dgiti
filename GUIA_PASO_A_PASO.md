@@ -350,11 +350,13 @@ La persona A solo debe **estudiarlo** para explicarlo (guion, bloque A). Si quie
 2. Los iconos son de la librería oficial **AWS** de draw.io (*Más formas → AWS*), basada en los
    *AWS Architecture Icons*. Si el profe exige expresamente el paquete 2026: en
    <https://aws.amazon.com/architecture/icons/> descarga el *Asset Package* y reemplaza los iconos que cambien.
-3. **Archivo → Exportar como → PNG**, zoom 200 %, borde 20, fondo blanco → reemplaza `docs/arquitectura.png`,
+3. **Archivo → Exportar como → PNG** desde la app **web** (app.diagrams.net), zoom 200 %, borde 20, fondo blanco →
+   reemplaza `docs/arquitectura.png` y **revisa que se vean CloudWatch, EBS y Auto Scaling a la derecha**
+   (la exportación por línea de comandos de draw.io Desktop recorta la imagen),
    y súbelo con `git add docs ; git commit -m "Diagrama actualizado" ; git push` (vuelve a desplegar; es correcto).
 
 **Lo que muestra el diagrama** (todo lo que exige el enunciado): usuarios, VPC, 6 subredes en 2 AZ, ALB,
-instancias en Auto Scaling Group, 3 Security Groups, RDS primaria + réplica, S3, CloudWatch,
+instancias en Auto Scaling Group, 3 Security Groups, RDS primaria + réplica, almacenamiento EBS/RDS cifrado, CloudWatch,
 **flujo de tráfico** (azul ①→④) y **flujo de CI/CD** (verde: push → Actions → instance refresh → ASG).
 
 ---
@@ -428,7 +430,7 @@ Escribe `yes` (~15 min) → **Destroy complete!** 📸 Luego **End Lab** en el L
 |---|---|---|
 | 1 | `InvalidClientTokenId` / `ExpiredToken` | Credenciales vencidas: Paso B2 de nuevo (y C2 para GitHub). |
 | 2 | `terraform plan`: error con el NAT Gateway / Elastic IP no permitido | En `terraform.tfvars`: `enable_nat_gateway = false` (las EC2 van a subredes públicas pero el SG sigue aceptando solo al ALB). `terraform apply`. |
-| 3 | Error creando el bucket S3 o el ALB por los *access logs* | `enable_alb_access_logs = false` y `terraform apply`. |
+| 3 | `AccessDenied ... s3:GetBucketObjectLockConfiguration ... service control policy` | Restricción del Learner Lab: deja `enable_alb_access_logs = false` (valor por defecto). Si quedó un bucket a medias: `terraform state rm "aws_s3_bucket.alb_logs[0]"` y `aws s3 rb s3://<bucket> --force`. |
 | 4 | El ALB da 502/503 más de 10 min | EC2 → Instances → una `ef-dgiti-app` → **Actions → Monitor and troubleshoot → Get system log**: busca `== API en linea`. Si dice `git clone fallo`: el repo no es público o `app_repo_url` está mal → corrígelo en `terraform.tfvars` y `terraform apply` (reemplaza las instancias). |
 | 5 | `/api/status` con `"degraded"` | La réplica aún se está creando o reiniciando. Espera 5 min. |
 | 6 | Apply: `DBInstanceAlreadyExists` o `already exists` | Quedó algo de un intento anterior: `terraform apply` otra vez; si sigue, bórralo en la consola o cambia `project_name`. |
@@ -467,6 +469,8 @@ la réplica es asíncrona y sí atiende lecturas. Dejamos `db_multi_az` como var
 
 **¿Por qué un solo NAT Gateway?** Costo. Solo afecta la salida a Internet de las instancias (instalación), no el
 tráfico de usuarios. En producción: uno por AZ.
+
+**¿Y el almacenamiento? ¿Por qué no hay bucket S3?** El almacenamiento son los discos **EBS gp3 cifrados** de las instancias y el volumen **gp3 cifrado de RDS** (20 GiB, con copias automáticas). Diseñamos también un bucket S3 para los logs de acceso del ALB (está en `main.tf`, variable `enable_alb_access_logs`), pero la política de la organización (SCP) del Learner Lab **niega `s3:GetBucketObjectLockConfiguration`**, operación que el proveedor de Terraform necesita para gestionar cualquier bucket. Lo comprobamos con un bucket de prueba y lo dejamos parametrizado: en una cuenta normal se activa con `true`.
 
 **¿Por qué no HTTPS?** Requiere un dominio propio y un certificado en ACM; el Learner Lab no da dominio. Sería agregar
 un listener 443 con el certificado y redirigir 80 → 443.

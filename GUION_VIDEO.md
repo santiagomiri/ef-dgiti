@@ -49,7 +49,7 @@ una parte en su propia cuenta de AWS Academy."
   instancias acepta el 8000 **solo desde el ALB**; y el de la base acepta el 5432 **solo desde las instancias**.
   Usamos referencias entre grupos y no IPs, porque con autoescalado las IPs cambian."
 - "Las instancias salen a Internet solo por un **NAT Gateway**, para instalar paquetes y bajar el código. Los logs
-  del balanceador van a **S3** y las métricas a **CloudWatch**."
+  las métricas van a **CloudWatch**. Los discos de las instancias (EBS) y de la base (RDS) son gp3 cifrados."
 - "En verde está el flujo de CI/CD: un push a GitHub dispara GitHub Actions, que prueba, valida y despliega
   reemplazando las instancias de forma gradual."
 
@@ -65,7 +65,7 @@ una parte en su propia cuenta de AWS Academy."
 - "`provider.tf` fija el proveedor AWS 5.x, la región y etiquetas comunes para todos los recursos."
 - "`variables.tf` parametriza todo: CIDRs, zonas, tamaño del Auto Scaling, clase de base de datos. La contraseña
   está marcada como `sensitive` y tiene validación."
-- "`main.tf` está organizado en 8 secciones: red, security groups, base de datos con réplica, S3, balanceador,
+- "`main.tf` está organizado en 8 secciones: red, security groups, base de datos con réplica, almacenamiento, balanceador,
   cómputo con launch template y auto scaling, y monitoreo con dashboard y alarmas."
 - "`outputs.tf` entrega la URL del balanceador, los endpoints, y los valores que necesita el pipeline."
 - "`terraform.tfvars.example` es la plantilla; el `terraform.tfvars` real tiene la contraseña y **no se sube a Git**."

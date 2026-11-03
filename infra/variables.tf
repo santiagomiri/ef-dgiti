@@ -174,7 +174,7 @@ variable "db_multi_az" {
 
 # ---------------------------------------------------------- Monitoreo ----
 variable "enable_alb_access_logs" {
-  description = "Guardar los logs de acceso del ALB en un bucket S3"
+  description = "Guardar los logs de acceso del ALB en un bucket S3. Apagado por defecto: la SCP del AWS Academy Learner Lab niega s3:GetBucketObjectLockConfiguration, que el proveedor de Terraform necesita para gestionar cualquier bucket. En una cuenta normal se puede activar"
   type        = bool
-  default     = true
+  default     = false
 }

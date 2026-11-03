@@ -20,7 +20,7 @@ integración**, **prueba de carga con k6** y **monitoreo en CloudWatch**.
 | Balanceo | ALB público, Target Group con health check `/health` cada 10 s | Reparte el tráfico y saca de rotación las instancias que fallan |
 | Cómputo | Launch Template (Amazon Linux 2023, IMDSv2, EBS cifrado) + ASG mín 2 / máx 4, escalado por CPU 50 % | Alta disponibilidad ante fallo de una instancia o de una AZ; elasticidad bajo carga |
 | Datos | RDS PostgreSQL primaria (AZ a) + réplica de lectura (AZ b), cifradas, sin acceso público | Escrituras en la primaria, lecturas en la réplica; la BD no tiene ruta a Internet |
-| Almacenamiento | S3 privado y cifrado con los logs de acceso del ALB (expiran a los 7 días) | Auditoría del tráfico |
+| Almacenamiento | EBS gp3 cifrado en las instancias y RDS gp3 cifrado (20 GiB); bucket S3 de logs del ALB opcional (`enable_alb_access_logs`) | Cifrado en reposo. El bucket se apaga en el Learner Lab porque su SCP niega `s3:GetBucketObjectLockConfiguration` |
 | Monitoreo | Dashboard de CloudWatch + 4 alarmas (hosts no saludables, 5XX, latencia p95, CPU de RDS) | Relacionar la prueba de carga con métricas reales |
 
 ## Estructura

@@ -5,7 +5,7 @@
 #   2. Red: VPC, 6 subredes en 2 AZ, Internet Gateway, NAT Gateway, rutas
 #   3. Security Groups encadenados: Internet -> ALB -> App -> BD
 #   4. Base de datos: RDS PostgreSQL primaria + replica de lectura
-#   5. Almacenamiento: bucket S3 para los logs de acceso del ALB
+#   5. Almacenamiento: bucket S3 opcional para logs del ALB (apagado en Learner Lab)
 #   6. Balanceador: ALB + Target Group + Listener HTTP
 #   7. Computo: Launch Template + Auto Scaling Group + escalado por CPU
 #   8. Monitoreo: dashboard y alarmas de CloudWatch
