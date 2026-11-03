@@ -83,7 +83,7 @@ k6 run -e BASE_URL=http://<dns-del-alb> -e PERFIL=estres load-tests/carga.js
 .\scripts\prueba-carga.ps1
 ```
 
-Perfiles: `humo` (5 VU, 30 s), `carga` (50 VU, 4 min), `estres` (200 VU, 8 min, dispara el escalado).
+Perfiles: `humo` (5 VU, 30 s), `carga` (50 VU, 4 min), `estres` (200 VU, ~10,5 min, dispara el escalado).
 
 ## Pruebas locales
 

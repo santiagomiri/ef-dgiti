@@ -160,8 +160,9 @@ no hay caída. La prueba de humo verifica que **todas** las instancias responden
 
 ## Clip 5 — E. Desempeño y monitoreo (6:45–9:25)
 
-> **Cómo grabarlo:** lanza la prueba (paso 1), graba la explicación, **pausa la grabación** y reanuda a los
-> ~5 minutos, cuando CloudWatch ya muestre el escalado.
+> **Cómo grabarlo:** la prueba dura ~10,5 min. Lanza la prueba, graba la explicación inicial y el dashboard de k6,
+> **pausa la grabación**, y reanuda hacia el **minuto 8** de la prueba: para entonces el Auto Scaling ya lanzó
+> instancias nuevas y están atendiendo tráfico. Así el clip queda en ~2:40 sin esperas.
 
 🖥️ (15 s) VS Code con `load-tests/carga.js` (stages y thresholds).
 🎙️ "La prueba de carga es con k6. El perfil de estrés sube de 0 a 200 usuarios virtuales: calentamiento, carga
@@ -176,35 +177,45 @@ cuántas respuestas llegan de cada zona."
 el resumen y un reporte HTML como evidencia."
 
 🖥️ (20 s) Dashboard de k6 en <http://127.0.0.1:5665> (usuarios virtuales, solicitudes/s, latencia).
-🎙️ "En vivo: [N] usuarios virtuales, unas [X] solicitudes por segundo, y la latencia p95 subió de [a] a [b]
-milisegundos: estoy saturando las instancias."
+🎙️ "En vivo: ya van 200 usuarios virtuales, unas 190 solicitudes por segundo, y la latencia p95 subió de unos
+30 milisegundos en reposo a cerca de 850: estoy saturando las dos instancias."
 
-🖥️ (30 s) Consola → **EC2 → Target groups → ef-dgiti-tg → Targets** (instancias sanas + nuevas) y luego
+🖥️ (30 s) Consola → **EC2 → Target groups → ef-dgiti-tg → Targets** (4 instancias *healthy*) y luego
 **Auto Scaling Groups → ef-dgiti-asg → Activity** (lanzamientos por la alarma de TargetTracking).
 🎙️ "Aquí se ve el balanceador operando: reparte entre todas las instancias sanas. Como la CPU superó el objetivo de
-50 %, la política de escalado lanzó instancias nuevas, y el balanceador las usa en cuanto pasan el health check."
+50 %, la política de escalado lanzó dos instancias nuevas, y el balanceador las usa en cuanto pasan el health check."
 
-🖥️ (45 s) **CloudWatch → Dashboards → ef-dgiti** (rango 1 h, actualización 10 s). Recorre los widgets:
+🖥️ (15 s) En otra ventana de PowerShell (raíz del repo), **con la prueba todavía corriendo**:
+```powershell
+.\scripts\verificar-balanceo.ps1 -Solicitudes 20
+```
+🎙️ "Y la prueba directa: 20 solicitudes ahora mismo se reparten entre las 4 instancias, dos en cada zona."
+
+🖥️ (45 s) **CloudWatch → Dashboards → ef-dgiti** (rango **1 hora**, actualización 10 s). Recorre los widgets:
 🎙️
-- "Solicitudes al ALB: la rampa de la prueba, hasta [X] por minuto."
-- "Tiempo de respuesta: el p95 subió a [b] en la saturación y bajó cuando entraron las instancias nuevas."
-- "Códigos HTTP: casi todo 2XX; [ningún / Y] error 5XX."
-- "CPU: el promedio superó la línea del objetivo de 50 %; cada instancia llegó a [Z] %."
-- "Auto Scaling: las instancias deseadas pasaron de 2 a [4]."
-- "Instancias saludables en el Target Group: de 2 a [4]."
-- "RDS: CPU y conexiones bajas en primaria y réplica: el cuello de botella fue la CPU de las instancias, no la base."
+- "Solicitudes al ALB: con 2 instancias el sistema atendía unas 11 500 solicitudes por minuto; con 4, unas 18 800,
+  un 60 % más."
+- "Tiempo de respuesta: el p95 subió a unos 870 milisegundos en la saturación y **bajó a unos 100** cuando entraron las
+  instancias nuevas: 9 veces menos."
+- "Códigos HTTP: prácticamente todo 2XX; los 5XX son el 0,02 %."
+- "CPU: con 2 instancias el promedio llegó a 87 %, por encima de la línea del objetivo de 50 %; con 4 bajó a 52 %."
+- "Auto Scaling: las instancias deseadas pasaron de 2 a 4, y las saludables en el Target Group también."
+- "RDS: la CPU no pasó de 9 % en la primaria ni de 6 % en la réplica: el cuello de botella fue la CPU de las
+  instancias, no la base de datos."
 
-🖥️ (25 s) Resumen final de k6 en PowerShell (o el reporte `load-tests/resultados/reporte-k6.html`).
-🎙️ "Resultado: [total] solicitudes, p95 de [b] milisegundos, [Y] % de errores. Mira `respuestas_por_instancia`:
-la instancia [i-...] atendió [A] y la [i-...] atendió [B], y por zona [A] en us-east-1a y [B] en us-east-1b:
-el balanceador repartió el tráfico casi en partes iguales."
-*(Si se cruzó un umbral:)* "El umbral de p95 se superó en la etapa de 200 usuarios: esa es la evidencia de
-saturación de dos t3.micro."
+🖥️ (25 s) Resumen final de k6 en PowerShell (o el reporte HTML en `load-tests/resultados/`).
+🎙️ "Resultado: unas 125 000 solicitudes, p95 de unos 840 milisegundos, 0,02 % de errores, y todos los umbrales en
+verde. En `respuestas_por_instancia` las dos instancias iniciales atendieron casi exactamente lo mismo, unas 48 000
+cada una, y por zona quedó 50 y 50: el balanceador repartió el tráfico en partes iguales. El resto lo atendieron las
+instancias nuevas."
 
-🎙️ (10 s) **Conclusión que relaciona resultados e infraestructura:** "Con dos t3.micro el servicio aguantó cerca de
-[N] usuarios con baja latencia; por encima se saturó la CPU y subió la latencia. El autoescalado reaccionó en unos
-[M] minutos y la latencia se recuperó. Para reaccionar más rápido bajaría el objetivo de CPU o subiría el mínimo de
-instancias."
+🎙️ (10 s) **Conclusión que relaciona resultados e infraestructura:** "Con dos t3.micro el servicio llega a su límite
+de CPU con unos 120 usuarios: la latencia sube a casi un segundo. El autoescalado reaccionó en unos 5 minutos —3 de
+la alarma y 2 de arranque— y con 4 instancias el sistema atendió 60 % más tráfico con 9 veces menos latencia. Para
+reaccionar más rápido bajaría el objetivo de CPU a 40 % o subiría el mínimo a 3 instancias."
+
+> Los números de tu prueba en vivo pueden variar un poco: dilos "alrededor de" o léelos de tu propia pantalla.
+> Los resultados completos de la prueba de referencia están en `load-tests/RESULTADOS.md`.
 
 ---
 

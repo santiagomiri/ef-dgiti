@@ -568,13 +568,13 @@ locals {
 
 resource "aws_cloudwatch_metric_alarm" "unhealthy_hosts" {
   alarm_name          = "${local.name}-instancias-no-saludables"
-  alarm_description   = "Alguna instancia del Target Group falla el health check /health"
+  alarm_description   = "Alguna instancia falla el health check /health por 3 minutos seguidos (una instancia nueva tarda ~2 min en arrancar)"
   namespace           = "AWS/ApplicationELB"
   metric_name         = "UnHealthyHostCount"
   dimensions          = local.tg_dims
   statistic           = "Maximum"
   period              = 60
-  evaluation_periods  = 1
+  evaluation_periods  = 3
   threshold           = 0
   comparison_operator = "GreaterThanThreshold"
   treat_missing_data  = "notBreaching"

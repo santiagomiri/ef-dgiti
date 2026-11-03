@@ -285,7 +285,7 @@ k6 run -e BASE_URL=$url -e PERFIL=humo load-tests/carga.js
 ```
 Todo ✓ en verde.
 
-### D3. Prueba de estrés (la del video, ~8 min)
+### D3. Prueba de estrés (la del video, ~10,5 min)
 ```powershell
 .\scripts\prueba-carga.ps1
 ```

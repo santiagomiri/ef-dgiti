@@ -6,7 +6,8 @@
 // Perfiles (variable PERFIL):
 //   humo   -> 5 usuarios, 30 s: verifica que todo responde
 //   carga  -> hasta 50 usuarios, ~4 min: comportamiento normal
-//   estres -> hasta 200 usuarios, ~8 min: satura la CPU y dispara el Auto Scaling
+//   estres -> hasta 200 usuarios, ~10.5 min: satura la CPU, dispara el Auto Scaling y
+//             deja tiempo para que las instancias nuevas reciban trafico
 //
 // Que mide: tiempo de respuesta (p50/p95/p99), usuarios virtuales concurrentes,
 // porcentaje de errores y como reparte el ALB las solicitudes entre zonas.
@@ -34,13 +35,16 @@ const PERFILES = {
     { duration: '2m', target: 50 },
     { duration: '30s', target: 0 },
   ],
+  // CPU > 50 % hacia el minuto 3; la alarma de escalado pide 3 minutos seguidos y cada
+  // instancia nueva tarda ~2,5 min en quedar sana: la meseta de 200 usuarios dura lo
+  // suficiente para ver a las instancias nuevas atendiendo y la latencia bajando.
   estres: [
-    { duration: '30s', target: 20 },   // calentamiento
-    { duration: '1m', target: 50 },    // carga normal
-    { duration: '1m30s', target: 100 }, // carga alta
-    { duration: '3m', target: 200 },   // saturacion: CPU > objetivo -> escala el ASG
-    { duration: '1m30s', target: 200 }, // sostenida: se ven las instancias nuevas
-    { duration: '30s', target: 0 },    // recuperacion
+    { duration: '30s', target: 20 },  // calentamiento
+    { duration: '1m', target: 60 },   // carga normal
+    { duration: '1m', target: 120 },  // carga alta: CPU pasa del 50 %
+    { duration: '1m', target: 200 },  // saturacion
+    { duration: '6m30s', target: 200 }, // sostenida: escala el ASG y entran las instancias nuevas
+    { duration: '30s', target: 0 },   // recuperacion
   ],
 };
 
