@@ -1,5 +1,7 @@
 # EF DGITI — Despliegue, automatización y validación de infraestructura AWS
 
+[![CI-CD](https://github.com/santiagomiri/ef-dgiti/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/santiagomiri/ef-dgiti/actions/workflows/ci-cd.yml)
+
 Evaluación Final de **Diseño y Gestión de Infraestructura Tecnológica** (Prof. Omar Pinzón Ardila).
 
 Servicio web (FastAPI) desplegado en AWS con **Terraform**, detrás de un **Application Load Balancer**,
@@ -77,6 +79,8 @@ Variables: `AWS_REGION`, `ASG_NAME`, `ALB_URL` (salen de `terraform output githu
 $env:K6_WEB_DASHBOARD = "true"
 $env:K6_WEB_DASHBOARD_EXPORT = "load-tests/resultados/reporte-k6.html"
 k6 run -e BASE_URL=http://<dns-del-alb> -e PERFIL=estres load-tests/carga.js
+# o, con todo automatizado (URL, instancias, reporte HTML y resumen):
+.\scripts\prueba-carga.ps1
 ```
 
 Perfiles: `humo` (5 VU, 30 s), `carga` (50 VU, 4 min), `estres` (200 VU, 8 min, dispara el escalado).

@@ -20,6 +20,9 @@ const PERFIL = __ENV.PERFIL || 'carga';
 const AZ_A = __ENV.AZ_A || 'us-east-1a';
 const AZ_B = __ENV.AZ_B || 'us-east-1b';
 const ITERACIONES = __ENV.ITERACIONES || '20000';
+// IDs de las instancias en servicio al iniciar (los pasa scripts/prueba-carga.ps1): el resumen
+// muestra cuantas respuestas atendio cada una = evidencia directa del reparto del ALB.
+const INSTANCIAS = (__ENV.INSTANCIAS || '').split(',').map((x) => x.trim()).filter(Boolean);
 
 const PERFILES = {
   humo: [
@@ -45,10 +48,16 @@ if (!PERFILES[PERFIL]) {
   throw new Error(`PERFIL desconocido: ${PERFIL}. Use humo, carga o estres.`);
 }
 
-// Respuestas exitosas por zona de disponibilidad (evidencia del balanceo)
+// Respuestas exitosas por zona y por instancia (evidencia del balanceo)
 const respuestasPorZona = new Counter('respuestas_por_zona');
+const respuestasPorInstancia = new Counter('respuestas_por_instancia');
 // Tiempo que reporta la propia instancia para el calculo de CPU
 const tiempoCpuServidor = new Trend('tiempo_cpu_servidor', true);
+
+const umbralesPorInstancia = {};
+for (const id of INSTANCIAS) {
+  umbralesPorInstancia[`respuestas_por_instancia{instancia:${id}}`] = ['count>0'];
+}
 
 export const options = {
   scenarios: {
@@ -67,6 +76,7 @@ export const options = {
     'http_req_duration{endpoint:items}': ['p(95)<2000'],
     [`respuestas_por_zona{zona:${AZ_A}}`]: ['count>0'], // el ALB envia trafico a la AZ A
     [`respuestas_por_zona{zona:${AZ_B}}`]: ['count>0'], // y a la AZ B
+    ...umbralesPorInstancia, // cada instancia inicial recibio trafico
   },
   summaryTrendStats: ['avg', 'min', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
 };
@@ -97,6 +107,7 @@ export default function () {
 
   if (ok) {
     respuestasPorZona.add(1, { zona: res.json('availability_zone') });
+    respuestasPorInstancia.add(1, { instancia: res.json('instance_id') });
     const elapsed = res.json('elapsed_ms');
     if (elapsed !== null && elapsed !== undefined) {
       tiempoCpuServidor.add(elapsed);

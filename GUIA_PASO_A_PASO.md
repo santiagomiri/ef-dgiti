@@ -287,11 +287,13 @@ Todo ✓ en verde.
 
 ### D3. Prueba de estrés (la del video, ~8 min)
 ```powershell
-New-Item -ItemType Directory -Force load-tests\resultados | Out-Null
-$env:K6_WEB_DASHBOARD = "true"
-$env:K6_WEB_DASHBOARD_EXPORT = "load-tests/resultados/reporte-k6.html"
-k6 run -e BASE_URL=$url -e PERFIL=estres load-tests/carga.js
+.\scripts\prueba-carga.ps1
 ```
+El script toma la URL del ALB y las instancias en servicio, abre el dashboard de k6 y guarda el resumen
+(`resumen-k6-estres-*.txt`) y el reporte HTML (`reporte-k6-estres-*.html`) en `load-tests\resultados\`.
+En el resumen, `respuestas_por_instancia` muestra cuántas solicitudes atendió **cada instancia**: es la
+evidencia directa de la operación del balanceador. (Prueba de humo de 30 s: `.\scripts\prueba-carga.ps1 -Perfil humo`.)
+
 Mientras corre:
 1. Abre **<http://127.0.0.1:5665>**: dashboard en vivo de k6 (usuarios virtuales, solicitudes/s, latencias).
 2. Abre el **dashboard de CloudWatch** (`terraform -chdir=infra output -raw cloudwatch_dashboard_url`),
@@ -300,7 +302,7 @@ Mientras corre:
 3. **EC2 → Target groups → ef-dgiti-tg → Targets**: aparecen instancias nuevas *initial* → *healthy*. 📸
 4. **EC2 → Auto Scaling Groups → ef-dgiti-asg → Activity**: *"Launching a new EC2 instance... alarm TargetTracking..."* 📸
 
-Al terminar, k6 imprime el resumen (📸 completo) y deja `load-tests/resultados/reporte-k6.html` (ábrelo, se ve muy bien en video).
+Al terminar, k6 imprime el resumen (📸 completo) y deja el reporte HTML en `load-tests/resultados/` (ábrelo, se ve muy bien en video).
 
 **Llena esta tabla con TUS números (la dirás en el video):**
 

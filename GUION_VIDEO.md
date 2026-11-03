@@ -9,7 +9,9 @@ apréndete las ideas y los números. Todo lo que dices se respalda con algo que 
 Graba **por bloques** (un clip por bloque) y luego únelos en **Clipchamp** (viene con Windows).
 Así puedes repetir un bloque si te equivocas y **cortar las esperas** (despliegue del pipeline, escalado).
 
-- Grabar pantalla: **Windows + Alt + R** (Xbox Game Bar) inicia y detiene. Si quieres cámara, usa **OBS Studio**.
+- **Aparece en cámara** (recomendado: es la evidencia más clara de que eres tú quien demuestra en vivo):
+  en **Clipchamp → Grabar → Pantalla y cámara**, o con **OBS Studio** (cámara en una esquina).
+  Si no tienes cámara: **Windows + Alt + R** (Xbox Game Bar) graba la pantalla con tu voz.
 - Antes de grabar: `.\scripts\verificar-todo.ps1` debe terminar en **TODO LISTO**.
 - Letra grande en PowerShell (Ctrl + rueda del mouse), navegador al 125 %, notificaciones apagadas.
 - **Nunca** mostrar `terraform.tfvars`, `~\.aws\credentials` ni AWS Details con las claves.
@@ -49,6 +51,13 @@ automatizadas, prueba de carga y monitoreo en CloudWatch."
   Uso referencias entre grupos y no IPs, porque con autoescalado las IPs cambian."
 - "Las instancias salen a Internet solo por un **NAT Gateway**. Los discos EBS y el almacenamiento de RDS van
   **cifrados**, y las métricas van a **CloudWatch**."
+- "**Decisiones de cómputo:** EC2 **t3.micro** con **Amazon Linux 2023** en un Auto Scaling Group. Prefiero escalar
+  **horizontalmente** (más instancias pequeñas detrás del balanceador) que verticalmente (una instancia grande):
+  da tolerancia a fallos y elasticidad. El Launch Template exige **IMDSv2** y cifra el disco, y la API corre como
+  servicio **systemd** con un usuario sin privilegios, con 2 procesos por instancia (una por vCPU)."
+- "**Alta disponibilidad:** todo está duplicado en dos zonas: subredes públicas, instancias y base de datos
+  (primaria en 1a, réplica en 1b). El balanceador revisa `/health` cada 10 segundos: si una instancia falla dos
+  veces la saca del tráfico, y el Auto Scaling la reemplaza automáticamente."
 - "En verde está el CI/CD: un push a GitHub dispara GitHub Actions, que prueba, valida y despliega reemplazando las
   instancias de forma gradual."
 
@@ -156,10 +165,10 @@ cuántas respuestas llegan de cada zona."
 
 🖥️ (10 s) Lanzar la prueba en PowerShell (raíz del repo):
 ```powershell
-$url = terraform -chdir=infra output -raw alb_url
-$env:K6_WEB_DASHBOARD = "true"; $env:K6_WEB_DASHBOARD_EXPORT = "load-tests/resultados/reporte-k6.html"
-k6 run -e BASE_URL=$url -e PERFIL=estres load-tests/carga.js
+.\scripts\prueba-carga.ps1
 ```
+🎙️ "El script toma la URL del balanceador y las instancias en servicio, abre el dashboard en vivo de k6 y guarda
+el resumen y un reporte HTML como evidencia."
 
 🖥️ (20 s) Dashboard de k6 en <http://127.0.0.1:5665> (usuarios virtuales, solicitudes/s, latencia).
 🎙️ "En vivo: [N] usuarios virtuales, unas [X] solicitudes por segundo, y la latencia p95 subió de [a] a [b]
@@ -181,8 +190,9 @@ milisegundos: estoy saturando las instancias."
 - "RDS: CPU y conexiones bajas en primaria y réplica: el cuello de botella fue la CPU de las instancias, no la base."
 
 🖥️ (25 s) Resumen final de k6 en PowerShell (o el reporte `load-tests/resultados/reporte-k6.html`).
-🎙️ "Resultado: [total] solicitudes, p95 de [b] milisegundos, [Y] % de errores, y las respuestas se repartieron [A]
-en us-east-1a y [B] en us-east-1b: el balanceador distribuyó entre las dos zonas."
+🎙️ "Resultado: [total] solicitudes, p95 de [b] milisegundos, [Y] % de errores. Mira `respuestas_por_instancia`:
+la instancia [i-...] atendió [A] y la [i-...] atendió [B], y por zona [A] en us-east-1a y [B] en us-east-1b:
+el balanceador repartió el tráfico casi en partes iguales."
 *(Si se cruzó un umbral:)* "El umbral de p95 se superó en la etapa de 200 usuarios: esa es la evidencia de
 saturación de dos t3.micro."
 
