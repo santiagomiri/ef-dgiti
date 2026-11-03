@@ -35,20 +35,38 @@ python3.11 -m venv "$APP_DIR/venv"
 "$APP_DIR/venv/bin/pip" install --quiet --upgrade pip
 "$APP_DIR/venv/bin/pip" install --quiet -r "$APP_DIR/src/app/requirements.txt"
 
-# 5. Configuracion (solo legible por el usuario app)
+# 5. Contrasena de la BD: desde SSM Parameter Store (cifrada con KMS) usando el
+#    rol IAM de la instancia; asi no viaja en este user_data.
+if [ -n "${db_secret_param}" ]; then
+  DB_PASSWORD=""
+  for intento in 1 2 3 4 5 6; do
+    if DB_PASSWORD=$(aws ssm get-parameter --region "${aws_region}" --name "${db_secret_param}" \
+        --with-decryption --query Parameter.Value --output text); then
+      break
+    fi
+    echo "Lectura de SSM fallo (intento $intento), reintentando en 10 s"
+    sleep 10
+  done
+  test -n "$DB_PASSWORD"
+  echo "Contrasena de la BD obtenida de SSM Parameter Store (${db_secret_param})"
+else
+  DB_PASSWORD='${db_password}'
+fi
+
+# 6. Configuracion (solo legible por el usuario app)
 cat > "$APP_DIR/app.env" <<EOF
 DB_HOST=${db_host}
 DB_REPLICA_HOST=${db_replica_host}
 DB_NAME=${db_name}
 DB_USER=${db_user}
-DB_PASSWORD=${db_password}
+DB_PASSWORD=$DB_PASSWORD
 APP_VERSION=$VERSION
 APP_ENV=${app_env}
 EOF
 chown -R app:app "$APP_DIR"
 chmod 600 "$APP_DIR/app.env"
 
-# 6. Servicio systemd: arranca con el sistema y se reinicia si falla
+# 7. Servicio systemd: arranca con el sistema y se reinicia si falla
 cat > /etc/systemd/system/ef-api.service <<EOF
 [Unit]
 Description=EF DGITI API (FastAPI + uvicorn)
@@ -71,7 +89,7 @@ EOF
 systemctl daemon-reload
 systemctl enable --now ef-api.service
 
-# 7. Verificacion local
+# 8. Verificacion local
 for intento in $(seq 1 30); do
   if curl -fsS "http://127.0.0.1:${app_port}/health"; then
     echo

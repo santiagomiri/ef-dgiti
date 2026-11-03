@@ -18,7 +18,7 @@ integración**, **prueba de carga con k6** y **monitoreo en CloudWatch**.
 | Capa | Recursos | Decisión |
 |------|----------|----------|
 | Red | VPC `10.0.0.0/16`, 6 subredes en 2 AZ (pública, app, BD), IGW, NAT Gateway | Segmentación en 3 capas; solo el ALB y el NAT están en subredes públicas |
-| Seguridad | `sg-alb` (80 desde Internet) → `sg-app` (8000 solo desde `sg-alb`) → `sg-db` (5432 solo desde `sg-app`) | Mínimo privilegio encadenado por Security Group, no por IP |
+| Seguridad | `sg-alb` (80 desde Internet) → `sg-app` (8000 solo desde `sg-alb`) → `sg-db` (5432 solo desde `sg-app`); contraseña de la BD en SSM Parameter Store (SecureString) | Mínimo privilegio encadenado por Security Group, no por IP; sin secretos en el código ni en el `user_data` |
 | Balanceo | ALB público, Target Group con health check `/health` cada 10 s | Reparte el tráfico y saca de rotación las instancias que fallan |
 | Cómputo | Launch Template (Amazon Linux 2023, IMDSv2, EBS cifrado) + ASG mín 2 / máx 4, escalado por CPU 50 % | Alta disponibilidad ante fallo de una instancia o de una AZ; elasticidad bajo carga |
 | Datos | RDS PostgreSQL primaria (AZ a) + réplica de lectura (AZ b), cifradas, sin acceso público | Escrituras en la primaria, lecturas en la réplica; la BD no tiene ruta a Internet |

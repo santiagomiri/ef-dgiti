@@ -416,6 +416,22 @@ resource "aws_lb_listener" "http" {
 }
 
 # ------------------------------------------------------------ 7. Computo ----
+locals {
+  # Con perfil IAM, la contrasena NO viaja en user_data: la instancia la lee de
+  # SSM Parameter Store (SecureString cifrado con KMS) usando su rol.
+  use_ssm_secret = var.instance_profile_name != ""
+}
+
+resource "aws_ssm_parameter" "db_password" {
+  count       = local.use_ssm_secret ? 1 : 0
+  name        = "/${local.name}/db/password"
+  description = "Contrasena maestra de RDS (la leen las instancias al arrancar)"
+  type        = "SecureString"
+  value       = var.db_password
+
+  tags = { Name = "${local.name}-db-password" }
+}
+
 resource "aws_launch_template" "app" {
   name_prefix            = "${local.name}-lt-"
   image_id               = data.aws_ami.al2023.id
@@ -433,7 +449,9 @@ resource "aws_launch_template" "app" {
     db_replica_host = aws_db_instance.replica.address
     db_name         = var.db_name
     db_user         = var.db_username
-    db_password     = var.db_password
+    db_password     = local.use_ssm_secret ? "" : var.db_password
+    db_secret_param = local.use_ssm_secret ? aws_ssm_parameter.db_password[0].name : ""
+    aws_region      = var.aws_region
     app_env         = "aws-${var.aws_region}"
   }), "\r", ""))
 

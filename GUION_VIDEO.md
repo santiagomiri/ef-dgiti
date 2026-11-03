@@ -78,7 +78,9 @@ Gateway y el NAT."
   balanceador, cómputo con launch template y auto scaling, y monitoreo con dashboard y alarmas."
 - "`outputs.tf` entrega la URL del balanceador, los endpoints y los valores que necesita el pipeline."
 - "`terraform.tfvars.example` es la plantilla; el `terraform.tfvars` real tiene la contraseña y **no se sube a Git**."
-- "`user_data.sh` es el arranque de cada instancia: instala Python, clona el repositorio y registra la API como servicio."
+- "`user_data.sh` es el arranque de cada instancia: instala Python, clona el repositorio, **lee la contraseña de la base
+  desde SSM Parameter Store cifrada con KMS usando el rol IAM de la instancia** (así la contraseña nunca viaja en el
+  user_data ni en el código) y registra la API como servicio."
 
 🖥️ (15 s) Captura o clip acelerado del `terraform apply` inicial hasta **Apply complete**.
 🎙️ "Este fue el despliegue inicial en mi cuenta: 49 recursos, unos 20 minutos; lo más lento es la réplica de RDS."

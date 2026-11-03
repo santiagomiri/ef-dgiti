@@ -41,7 +41,7 @@ minuto del video se evidencia. Ruta de archivos relativa a la raíz del reposito
 | Validación del código | `ruff check` + `ruff format --check`; `terraform fmt`, `init`, `validate`; verificación de archivos requeridos | Clip 4: jobs 1 y 2 en verde |
 | Ejecución de pruebas | 32 unitarias + 3 de integración contra PostgreSQL 16 real (contenedor de servicio); cobertura ≥ 85 % (real 97,6 %) | Clip 4: pasos de pruebas y tabla del resumen |
 | Despliegue o preparación del despliegue | *Instance refresh* del ASG (sin caída) + prueba de humo que verifica el commit en todas las instancias | Clip 4: job 3 y página con la versión nueva |
-| Variables o secretos sin exponer credenciales | Secretos `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`; variables `AWS_REGION`, `ASG_NAME`, `ALB_URL` | Clip 4: pantalla de Secrets (valores ocultos) |
+| Variables o secretos sin exponer credenciales | Secretos `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`; variables `AWS_REGION`, `ASG_NAME`, `ALB_URL`. Contraseña de la BD en SSM Parameter Store (SecureString/KMS), leída por las instancias con su rol IAM: no está en el código ni en el `user_data` | Clip 4: pantalla de Secrets (valores ocultos). Clip 2: `user_data.sh` |
 
 ## 5. Prueba de desempeño (`load-tests/carga.js`, `scripts/prueba-carga.ps1`)
 

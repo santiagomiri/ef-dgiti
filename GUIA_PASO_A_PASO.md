@@ -465,9 +465,7 @@ tráfico de usuarios. En producción: uno por AZ.
 **¿Por qué no HTTPS?** Requiere un dominio propio y un certificado en ACM; el Learner Lab no da dominio. Sería agregar
 un listener 443 con el certificado y redirigir 80 → 443.
 
-**¿Cómo se manejan los secretos?** Contraseña de la BD solo en `terraform.tfvars` (en `.gitignore`) y marcada
-`sensitive` (Terraform no la imprime); credenciales de AWS en GitHub Secrets (aparecen como `***`); en la instancia,
-`app.env` con permisos 600 del usuario `app`, que no es root. Mejora futura: AWS Secrets Manager.
+**¿Cómo se manejan los secretos?** La contraseña de la BD está en `terraform.tfvars` (en `.gitignore`) y marcada `sensitive` (Terraform no la imprime). Terraform la guarda en **SSM Parameter Store como SecureString** (cifrada con KMS) y cada instancia la lee al arrancar **con su rol IAM** (`LabInstanceProfile`): no viaja en el `user_data` ni en el código. Las credenciales de AWS del pipeline están en **GitHub Secrets** (aparecen como `***`). En la instancia, el archivo de configuración tiene permisos 600 del usuario `app`, que no es root.
 
 **¿Por qué Terraform y no la consola?** Reproducible (los 5 integrantes desplegamos lo mismo en 5 cuentas),
 versionado en Git, revisable con `plan` antes de cambiar, y se destruye con un comando.
