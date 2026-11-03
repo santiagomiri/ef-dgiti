@@ -332,18 +332,15 @@ al final se ve la actividad del ASG lanzando el reemplazo. 📸
 
 ## Fase E — Diagrama (✅ ya hecho)
 
-**Ya está hecho:** `docs/arquitectura.png` (3409×2163, exportado con draw.io) y el editable `docs/arquitectura.drawio`.
-La persona A solo debe **estudiarlo** para explicarlo (guion, bloque A). Si quieren modificarlo:
+**Ya está hecho:** `docs/arquitectura.png` (3510×2318) y el editable `docs/arquitectura.drawio`.
 
-1. Ábrelo con **draw.io Desktop** (ya instalado en el PC de Santiago) o en <https://app.diagrams.net>
-   → **Abrir desde → Dispositivo** → `docs/arquitectura.drawio`.
-2. Los iconos son de la librería oficial **AWS** de draw.io (*Más formas → AWS*), basada en los
-   *AWS Architecture Icons*. Si el profe exige expresamente el paquete 2026: en
-   <https://aws.amazon.com/architecture/icons/> descarga el *Asset Package* y reemplaza los iconos que cambien.
-3. **Archivo → Exportar como → PNG** desde la app **web** (app.diagrams.net), zoom 200 %, borde 20, fondo blanco →
-   reemplaza `docs/arquitectura.png` y **revisa que se vean CloudWatch, EBS y Auto Scaling a la derecha**
-   (la exportación por línea de comandos de draw.io Desktop recorta la imagen),
-   y súbelo con `git add docs ; git commit -m "Diagrama actualizado" ; git push` (vuelve a desplegar; es correcto).
+- **Iconos oficiales AWS 2026:** cada icono es el **SVG original del paquete oficial *AWS Architecture Icons* de
+  julio de 2026** (descargado de <https://aws.amazon.com/architecture/icons/>), incrustado en el archivo. No se usa la
+  librería de draw.io, que según AWS puede contener iconos antiguos. La fuente está anotada al pie del diagrama.
+- Grupos con los iconos y colores de la guía de AWS: AWS Cloud, Región, VPC, subredes pública/privada y Auto Scaling
+  group; los Security Groups van en rojo y las zonas de disponibilidad con borde azul punteado.
+- Si quieres modificarlo: ábrelo con **draw.io Desktop** o <https://app.diagrams.net> → **Abrir desde → Dispositivo**.
+  Exporta a PNG desde la app **web**, zoom 200 %, y revisa que se vea completa la columna derecha.
 
 **Lo que muestra el diagrama** (todo lo que exige el enunciado): usuarios, VPC, 6 subredes en 2 AZ, ALB,
 instancias en Auto Scaling Group, 3 Security Groups, RDS primaria + réplica, almacenamiento EBS/RDS cifrado, CloudWatch,
@@ -366,7 +363,6 @@ Alternativa: cada uno graba su bloque con OBS/Xbox Game Bar y se unen en **Clipc
 - [ ] PowerShell con **letra grande** (Ctrl + rueda del mouse) y fondo oscuro; navegador al 125 %.
 - [ ] Notificaciones silenciadas (Windows: *No molestar*). Cierra WhatsApp/Correo.
 - [ ] **Nunca** mostrar `terraform.tfvars`, `~/.aws/credentials` ni AWS Details con las claves visibles.
-- [ ] Persona D: lanzó el push `v3` ~12 min antes de su turno. Persona E: lanzó k6 `estres` ~6 min antes.
 
 ### F3. Al inicio de **cada** bloque (evidencia de la cuenta propia — obligatorio)
 1. Di tu nombre completo.
@@ -378,9 +374,12 @@ Alternativa: cada uno graba su bloque con OBS/Xbox Game Bar y se unen en **Clipc
 Sigue `GUION_VIDEO.md`. Habla mirando la pantalla, **mueve el mouse sobre lo que nombras**, no leas.
 Cronometra: el total debe quedar en **9:30–9:50**. **Nunca más de 10:00.**
 
-### F5. Edición
-Corta silencios y esperas (por ejemplo, el `terraform apply` acelerado x16 con un texto "acelerado 16x").
-Exporta en 1080p. Revisa el audio de cada persona.
+### F5. Edición (regla del profesor: **procesos completos**)
+- Une los clips en orden. **Nunca** cortes el medio de un proceso (pipeline, prueba de carga, apply, prueba de falla).
+- Los procesos largos se **aceleran** (fragmento → **Velocidad → 8x**) con el texto en pantalla
+  **"⏩ Proceso completo, acelerado 8x"**: se ven de principio a fin sin pasarse de 10 minutos.
+- Sí puedes quitar silencios **entre** clips y repetir un clip completo si te equivocas.
+- Exporta en **1080p** y revisa el audio.
 
 ---
 

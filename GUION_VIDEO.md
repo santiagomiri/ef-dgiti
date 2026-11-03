@@ -7,7 +7,12 @@ apréndete las ideas y los números. Todo lo que dices se respalda con algo que 
 ## Cómo grabar (recomendado para una sola persona)
 
 Graba **por bloques** (un clip por bloque) y luego únelos en **Clipchamp** (viene con Windows).
-Así puedes repetir un bloque si te equivocas y **cortar las esperas** (despliegue del pipeline, escalado).
+
+> **Regla del profesor: "puedes unir partes, pero que sean procesos completos".** Cada clip muestra cada proceso
+> **de principio a fin, sin cortes en el medio ni pausas de grabación**. Los procesos largos (pipeline ~10 min,
+> prueba de carga ~10,5 min) se graban **enteros** y en Clipchamp se **aceleran** (clic en el fragmento →
+> **Velocidad** → 8x), con un texto en pantalla: **"⏩ Proceso completo, acelerado 8x"**. Así se ve todo el
+> proceso sin pasarse de los 10 minutos. Lo que sí puedes hacer: repetir un clip entero si te equivocas.
 
 - **Aparece en cámara** (recomendado: es la evidencia más clara de que eres tú quien demuestra en vivo):
   en **Clipchamp → Grabar → Pantalla y cámara**, o con **OBS Studio** (cámara en una esquina).
@@ -146,8 +151,10 @@ se ve en su actividad."
 
 ## Clip 4 — D. Pipeline CI/CD (4:45–6:45)
 
-> **Antes de grabar este clip:** haz el cambio `v3` (en `app/main.py` cambia el `<h1>`), `git commit` y `git push`,
-> y espera ~10 min a que el run termine. Graba mostrando el run ya terminado.
+> **Proceso completo:** empieza a grabar **antes** del cambio. Muestra el cambio `v3` en `app/main.py` (el `<h1>`),
+> haz `git commit` y `git push` en cámara, abre **Actions** y deja grabando **hasta que los 3 jobs queden en verde**
+> (~10 min). En Clipchamp acelera la espera 8x con el texto "⏩ Proceso completo, acelerado 8x". Luego, a
+> velocidad normal, recorre el run terminado (pruebas, despliegue, resumen) y la página con la versión nueva.
 
 🖥️ (25 s) VS Code con `.github/workflows/ci-cd.yml`.
 🎙️ "El pipeline en GitHub Actions se dispara con cada push a `main` y tiene tres jobs: uno, **validación de código y
@@ -177,9 +184,11 @@ no hay caída. La prueba de humo verifica que **todas** las instancias responden
 
 ## Clip 5 — E. Desempeño y monitoreo (6:45–9:25)
 
-> **Cómo grabarlo:** la prueba dura ~10,5 min. Lanza la prueba, graba la explicación inicial y el dashboard de k6,
-> **pausa la grabación**, y reanuda hacia el **minuto 8** de la prueba: para entonces el Auto Scaling ya lanzó
-> instancias nuevas y están atendiendo tráfico. Así el clip queda en ~2:40 sin esperas.
+> **Proceso completo:** graba **sin pausas** desde que lanzas la prueba hasta el resumen final de k6 (~10,5 min).
+> Mientras corre, ve mostrando en orden: dashboard de k6 → CloudWatch → Target Group → Activity del ASG →
+> `verificar-balanceo.ps1` (hacia el minuto 8, con 4 instancias). En Clipchamp acelera **8x** los tramos de espera
+> (texto "⏩ Proceso completo, acelerado 8x") y deja a velocidad normal los momentos en que explicas. El clip
+> queda en ~2:40 mostrando el proceso entero.
 
 🖥️ (15 s) VS Code con `load-tests/carga.js` (stages y thresholds).
 🎙️ "La prueba de carga es con k6. El perfil de estrés sube de 0 a 200 usuarios virtuales: calentamiento, carga

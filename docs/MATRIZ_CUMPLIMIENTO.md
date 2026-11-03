@@ -59,7 +59,7 @@ minuto del video se evidencia. Ruta de archivos relativa a la raíz del reposito
 
 | Debe mostrar | ¿Está? |
 |---|---|
-| Iconos oficiales de AWS | ✅ librería oficial AWS de draw.io (AWS Architecture Icons) |
+| Iconos oficiales de AWS 2026 | ✅ SVG originales del paquete oficial *AWS Architecture Icons* de julio de 2026 (aws.amazon.com/architecture/icons), incrustados en el `.drawio`; fuente anotada al pie |
 | Usuarios | ✅ |
 | VPC | ✅ `10.0.0.0/16` |
 | Subredes | ✅ 6 (pública, app y BD × 2 AZ) con CIDR |
