@@ -30,56 +30,44 @@ El proyecto `ef-dgiti/` ya está completo y **verificado localmente**: 32 prueba
 
 ---
 
-## 1. Organización del equipo (léanlo juntos, 5 min)
+## 1. Organización: trabajo individual
 
-El video tiene **5 bloques** = los 5 criterios de la rúbrica. **Cada integrante presenta al menos un bloque
-mostrando SU propia cuenta de AWS Academy.** Por eso **todos despliegan la infraestructura en su propia cuenta**
-(Fase B): así cada uno tiene recursos reales que mostrar.
+Eres el **único integrante**: presentas los **5 bloques** (= los 5 criterios de la rúbrica) en **tu** cuenta de
+AWS Academy Learner Lab. Así se cumple de sobra la regla de que "cada integrante demuestre en su propia cuenta".
 
 | Bloque | Criterio (peso) | Duración en video |
 |---|---|---|
-| **A** | Arquitectura (10 %) | 1:15 |
+| **A** | Arquitectura (10 %) | 1:15 (+ 15 s de intro) |
 | **B** | Infraestructura como Código (25 %) | 2:00 |
 | **C** | Servicio desplegado (10 %) | 1:15 |
 | **D** | Pipeline CI/CD (25 %) | 2:00 |
 | **E** | Desempeño y monitoreo (30 %) | 2:40 |
 
-Reparto según cuántos son:
-
-| Integrantes | Persona 1 | Persona 2 | Persona 3 | Persona 4 | Persona 5 |
-|---|---|---|---|---|---|
-| 2 | A + B + C | D + E | | | |
-| 3 | A + B | C + D | E | | |
-| 4 | A | B | C + D | E | |
-| 5 | A | B | C | D | E |
-
-- Quien presente **D (CI/CD)** debe ser **dueño del repositorio de GitHub** (o colaborador con permiso de *Admin*),
-  porque los secretos del pipeline van con **sus** credenciales de AWS.
-- Quien presente **E** debería ser el más tranquilo frente a la cámara: vale 30 %.
+Graba **un clip por bloque** y únelos en Clipchamp (ver `GUION_VIDEO.md`): puedes repetir un bloque si te
+equivocas y cortar las esperas. Las fases de esta guía que dicen "todos" o "persona X" las haces tú.
 
 ---
 
 ## 2. Cronograma sugerido (hoy → mañana 10:00)
 
-| Hora | Qué | Quién |
+| Hora | Qué | Estado |
 |---|---|---|
-| Ahora | Fase 3 (instalar herramientas) | Todos, en paralelo |
-| +30 min | Fase A (subir repo) | Dueño del repo |
-| +45 min | Fase B (`terraform apply`, tarda ~25 min) | **Todos a la vez**, cada uno en su cuenta |
-| +1 h 15 | Fase C (pipeline) y Fase D (k6 de humo) | Dueño del repo / persona E |
-| +1 h 45 | Fase E (diagrama exportado) | Persona A |
-| +2 h | **Ensayo completo cronometrado** con el guion (`GUION_VIDEO.md`) | Todos |
-| +2 h 30 | **Grabación** | Todos |
-| +3 h 30 | Edición y revisión con la lista final (sección 10) | 1 persona + revisión de todos |
-| Antes de las 8:00 | **Entregar** (no esperen al último minuto) | |
-| Después de entregar | `terraform destroy` en cada cuenta | Todos |
+| Hecho | Herramientas, repo en GitHub, pipeline (pruebas + Terraform en verde), diagrama | ✅ |
+| Ahora | Fase B: `terraform apply` (~25 min) | 🔄 |
+| +30 min | Fase C: secretos y variables de GitHub + run de despliegue en verde | ⏳ |
+| +45 min | Fase D: k6 de humo y de estrés, CloudWatch, prueba de falla; anotar los números | ⏳ |
+| +1 h 30 | **Ensayo** de cada bloque con el guion (cronometrado) | ⏳ |
+| +2 h | **Grabación** por clips (con sesión del Learner Lab recién iniciada) | ⏳ |
+| +3 h | Edición en Clipchamp y revisión con la lista final (sección 10) | ⏳ |
+| Antes de las 8:00 | **Entregar** (no esperes al último minuto) | ⏳ |
+| Después de entregar | `terraform destroy` | ⏳ |
 
 > ⚠️ Las credenciales del Learner Lab **cambian en cada sesión**. Si cierras el Learner Lab o se acaba el tiempo,
-> repite el **Paso B2** (credenciales) y, el dueño del repo, la **Fase C2** (secretos de GitHub).
+> repite el **Paso B2** (credenciales) y la **Fase C2** (secretos de GitHub).
 
 ---
 
-## 3. Preparar cada PC (TODOS)
+## 3. Preparar el PC (✅ ya hecho en tu PC)
 
 ### 3.1 Instalar herramientas (si ya las tienes, sáltalo)
 Abre **PowerShell** y pega una línea a la vez:
@@ -105,7 +93,7 @@ Cada uno necesita usuario de GitHub (para clonar no hace falta iniciar sesión p
 
 ---
 
-## Fase A — Subir el código a GitHub (SOLO el dueño del repo, ~10 min)
+## Fase A — Subir el código a GitHub (✅ ya hecho)
 
 **A1.** En <https://github.com/new>: nombre `ef-dgiti`, **Public**, **sin** README ni .gitignore → **Create repository**.
 
@@ -134,7 +122,7 @@ Si alguien más del grupo hará commits, agrégalo en **Settings → Collaborato
 
 ---
 
-## Fase B — Desplegar la infraestructura en TU cuenta (TODOS, ~35 min)
+## Fase B — Desplegar la infraestructura en tu cuenta (~35 min)
 
 ### B1. Iniciar el Learner Lab
 Canvas → tarjeta verde **AWS Academy Learner Lab** (la del parcial, NO la morada de Cloud Foundations) → **Modules** → **Launch AWS Academy Learner Lab** → **Start Lab** → espera el círculo 🟢 junto a "AWS".
@@ -224,7 +212,7 @@ Opcional, todo por CLI (sirve de respaldo): `cd ..` y luego `.\scripts\ver-recur
 
 ---
 
-## Fase C — Pipeline CI/CD (SOLO el dueño del repo, ~20 min)
+## Fase C — Pipeline CI/CD (~20 min)
 
 ### C1. Variables del repositorio (datos no sensibles)
 En la carpeta `infra` de **tu** despliegue:
@@ -280,7 +268,7 @@ Abre la URL del ALB: ahora dice **"- v2"** y la **Versión (commit)** coincide c
 
 ---
 
-## Fase D — Prueba de carga, balanceador y CloudWatch (persona E, ~30 min de práctica)
+## Fase D — Prueba de carga, balanceador y CloudWatch (~30 min)
 
 Desde la **raíz** del repo, con tu despliegue:
 
@@ -340,7 +328,7 @@ al final se ve la actividad del ASG lanzando el reemplazo. 📸
 
 ---
 
-## Fase E — Diagrama (persona A, ~10 min)
+## Fase E — Diagrama (✅ ya hecho)
 
 **Ya está hecho:** `docs/arquitectura.png` (3409×2163, exportado con draw.io) y el editable `docs/arquitectura.drawio`.
 La persona A solo debe **estudiarlo** para explicarlo (guion, bloque A). Si quieren modificarlo:
