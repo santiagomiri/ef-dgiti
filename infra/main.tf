@@ -511,13 +511,9 @@ resource "aws_autoscaling_group" "app" {
     version = aws_launch_template.app.latest_version
   }
 
-  # Si cambia el Launch Template, reemplazo gradual sin caida del servicio
-  instance_refresh {
-    strategy = "Rolling"
-    preferences {
-      min_healthy_percentage = 50
-    }
-  }
+  # Sin bloque instance_refresh: la SCP del Learner Lab niega
+  # autoscaling:StartInstanceRefresh. El reemplazo gradual lo hace el pipeline
+  # (job 3), terminando una instancia a la vez.
 
   enabled_metrics = [
     "GroupMinSize",

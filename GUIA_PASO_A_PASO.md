@@ -258,7 +258,7 @@ GitHub → pestaña **Actions** → el run nuevo. Debe quedar **todo en verde** 
 1. **Validación de código y pruebas** (~1 min): abre los pasos *Pruebas unitarias* (32 passed, cobertura) y
    *Pruebas de integración* (3 passed contra PostgreSQL). Abajo, el **resumen** con la tabla de pruebas.
 2. **Validación de infraestructura** (~30 s): fmt, init, validate.
-3. **Despliegue en AWS** (8–12 min): el *instance refresh* reemplaza las instancias de a una (sin caída), y la
+3. **Despliegue en AWS** (8–12 min): el *rolling update* reemplaza las instancias de a una (sin caída), y la
    *prueba de humo* verifica que **todas** responden el commit nuevo. Resumen con la tabla instancia/zona/versión.
 
 Abre la URL del ALB: ahora dice **"- v2"** y la **Versión (commit)** coincide con el commit en GitHub. 📸
@@ -347,7 +347,7 @@ La persona A solo debe **estudiarlo** para explicarlo (guion, bloque A). Si quie
 
 **Lo que muestra el diagrama** (todo lo que exige el enunciado): usuarios, VPC, 6 subredes en 2 AZ, ALB,
 instancias en Auto Scaling Group, 3 Security Groups, RDS primaria + réplica, almacenamiento EBS/RDS cifrado, CloudWatch,
-**flujo de tráfico** (azul ①→④) y **flujo de CI/CD** (verde: push → Actions → instance refresh → ASG).
+**flujo de tráfico** (azul ①→④) y **flujo de CI/CD** (verde: push → Actions → reemplazo gradual de instancias → ASG).
 
 ---
 
@@ -427,7 +427,7 @@ Escribe `yes` (~15 min) → **Destroy complete!** 📸 Luego **End Lab** en el L
 | 7 | Apply se corta a la mitad (se venció la sesión) | Credenciales nuevas (B2) y `terraform apply` otra vez: continúa desde donde quedó. |
 | 8 | Job 3 del pipeline: `Faltan las variables` | Fase C1. |
 | 9 | Job 3: `The security token included in the request is invalid` | Secretos vencidos: Fase C2 y en Actions → **Re-run jobs**. |
-| 10 | Job 3: `InstanceRefreshInProgress` | Ya hay un despliegue en curso: espera a que termine y re-ejecuta. |
+| 10 | Job 3: `El reemplazo de i-... no quedo sano en 10 minutos` | Revisa el log de arranque de la instancia nueva (problema 4). Si fue algo transitorio, en Actions → **Re-run jobs**. |
 | 11 | Job 1 falla en `ruff format --check` | Alguien editó el código a mano: corre `ruff format .` (o deshaz el cambio) y sube. |
 | 12 | k6: `thresholds ... have been crossed` (exit 99) | Normal en `estres` si se saturó: es la evidencia de saturación. Explica qué umbral se cruzó y por qué. |
 | 13 | `No se puede cargar el archivo ... la ejecución de scripts está deshabilitada` | Paso 3.2, o usa `powershell -ExecutionPolicy Bypass -File .\scripts\...` |
@@ -470,8 +470,7 @@ un listener 443 con el certificado y redirigir 80 → 443.
 **¿Por qué Terraform y no la consola?** Reproducible (los 5 integrantes desplegamos lo mismo en 5 cuentas),
 versionado en Git, revisable con `plan` antes de cambiar, y se destruye con un comando.
 
-**¿Cómo despliega el pipeline sin downtime?** *Instance refresh* con 50 % mínimo saludable: reemplaza de a una
-instancia, espera que la nueva pase el health check y luego sigue. La prueba de humo confirma el commit en todas.
+**¿Cómo despliega el pipeline sin downtime?** Con un *rolling update*: termina **una** instancia, el Auto Scaling lanza su reemplazo (que clona el commit nuevo al arrancar) y el pipeline espera a que esté **sano en el ALB** antes de seguir con la siguiente; mientras tanto la otra instancia atiende todo el tráfico. La prueba de humo confirma el commit en todas. Lo implementamos en el pipeline porque la SCP del Learner Lab **niega `autoscaling:StartInstanceRefresh`** (el *instance refresh* nativo de AWS); lo comprobamos con el error exacto.
 
 **¿Qué demuestran las pruebas?** Unitarias (32): lógica de la API y de la capa de datos con dobles de prueba (incluida la reutilización de conexiones)
 (caídas de BD, réplica caída, validaciones, pool agotado, IMDSv2). Integración (3): la API real contra

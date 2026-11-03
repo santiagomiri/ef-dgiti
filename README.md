@@ -67,7 +67,7 @@ terraform output
 1. **Validación de código y pruebas**: `ruff` (lint + formato), `pytest` unitarias con cobertura,
    pruebas de integración contra un contenedor `postgres:16`, resumen en la página del job.
 2. **Validación de infraestructura**: archivos requeridos, `terraform fmt -check`, `init`, `validate`.
-3. **Despliegue** (solo en `main`): credenciales desde **GitHub Secrets**, *instance refresh* del ASG
+3. **Despliegue** (solo en `main`): credenciales desde **GitHub Secrets**, *rolling update* del ASG (una instancia a la vez, esperando que la nueva esté sana en el ALB)
    (reemplazo gradual sin caída) y prueba de humo que verifica que todas las instancias sirven el commit nuevo.
 
 Secretos: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`.

@@ -40,7 +40,7 @@ minuto del video se evidencia. Ruta de archivos relativa a la raíz del reposito
 | GitHub Actions | Workflow `CI-CD` en cada push a `main` | Clip 4 (4:45) |
 | Validación del código | `ruff check` + `ruff format --check`; `terraform fmt`, `init`, `validate`; verificación de archivos requeridos | Clip 4: jobs 1 y 2 en verde |
 | Ejecución de pruebas | 32 unitarias + 3 de integración contra PostgreSQL 16 real (contenedor de servicio); cobertura ≥ 85 % (real 97,6 %) | Clip 4: pasos de pruebas y tabla del resumen |
-| Despliegue o preparación del despliegue | *Instance refresh* del ASG (sin caída) + prueba de humo que verifica el commit en todas las instancias | Clip 4: job 3 y página con la versión nueva |
+| Despliegue o preparación del despliegue | Rolling update del ASG: reemplaza una instancia a la vez y espera que la nueva esté sana en el ALB (sin caída) + prueba de humo que verifica el commit en todas las instancias | Clip 4: job 3 y página con la versión nueva |
 | Variables o secretos sin exponer credenciales | Secretos `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`; variables `AWS_REGION`, `ASG_NAME`, `ALB_URL`. Contraseña de la BD en SSM Parameter Store (SecureString/KMS), leída por las instancias con su rol IAM: no está en el código ni en el `user_data` | Clip 4: pantalla de Secrets (valores ocultos). Clip 2: `user_data.sh` |
 
 ## 5. Prueba de desempeño (`load-tests/carga.js`, `scripts/prueba-carga.ps1`)
@@ -67,7 +67,7 @@ minuto del video se evidencia. Ruta de archivos relativa a la raíz del reposito
 | Instancias o servicios de cómputo | ✅ EC2 t3.micro en Auto Scaling Group |
 | Security Groups | ✅ 3, con sus reglas |
 | Base de datos y almacenamiento | ✅ RDS primaria + réplica; EBS gp3 cifrado |
-| Flujo de despliegue CI/CD | ✅ verde: push → GitHub Actions → instance refresh → ASG |
+| Flujo de despliegue CI/CD | ✅ verde: push → GitHub Actions → reemplazo gradual de instancias → ASG |
 | Flujo de tráfico de usuarios | ✅ azul numerado ① → ④ |
 
 ## 7. Video (máx. 10 min) y rúbrica
@@ -81,8 +81,12 @@ minuto del video se evidencia. Ruta de archivos relativa a la raíz del reposito
 | Desempeño y monitoreo (30 %) | Prueba de carga, balanceador funcionando, métricas en CloudWatch | 5 |
 | Requisito general | Demostración en vivo en la **cuenta personal de AWS Academy**; no solo narración ni diapositivas | 1 (evidencia de cuenta) y todos |
 
-## Restricción del entorno documentada
+## Restricciones del entorno documentadas
 
-El AWS Academy Learner Lab aplica una política de organización (SCP) que **niega `s3:GetBucketObjectLockConfiguration`**,
-operación que el proveedor de Terraform ejecuta al gestionar cualquier bucket S3. Por eso el bucket de logs de acceso
-del ALB quedó **parametrizado y apagado** (`enable_alb_access_logs = false`); en una cuenta AWS normal se activa con `true`.
+El AWS Academy Learner Lab aplica políticas de organización (SCP) con **denegaciones explícitas** que comprobamos con
+el error exacto de AWS. Las resolvimos sin perder ningún requisito:
+
+| Operación denegada | Impacto | Solución aplicada |
+|---|---|---|
+| `s3:GetBucketObjectLockConfiguration` | El proveedor de Terraform no puede gestionar buckets S3 (logs de acceso del ALB) | Bucket parametrizado y apagado (`enable_alb_access_logs = false`); en una cuenta normal se activa con `true`. Almacenamiento: EBS y RDS gp3 cifrados |
+| `autoscaling:StartInstanceRefresh` | No se puede usar el *instance refresh* nativo de AWS (ni desde Terraform ni desde el pipeline) | El pipeline implementa el *rolling update*: termina una instancia a la vez y espera que su reemplazo esté sano en el ALB antes de seguir |

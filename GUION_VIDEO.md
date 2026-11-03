@@ -147,8 +147,10 @@ unitarias** (`32 passed`, cobertura) y **Pruebas de integración** (`3 passed`) 
 de datos, incluso escenarios de falla como la réplica caída o la base sin conexión. Las 3 pruebas de integración
 corren contra PostgreSQL 16 real. Si cualquiera fallara, el despliegue no ocurre."
 
-🖥️ (25 s) Job 3: paso **Rolling update** (`estado=InProgress avance=50%` → `Successful`) y la tabla del **Summary**.
-🎙️ "El despliegue usa *instance refresh*: reemplaza las instancias de a una, manteniendo al menos 50 % sanas, así
+🖥️ (25 s) Job 3: paso **Rolling update** (abre los grupos "Reemplazando i-..." con las líneas `instancias sanas sin i-...: 2 de 2`) y la tabla del **Summary** con instancia, zona y versión.
+🎙️ "El despliegue es un *rolling update*: termina una instancia, el Auto Scaling lanza su reemplazo con el código nuevo,
+y el pipeline espera a que esté sana en el balanceador antes de seguir con la otra; mientras tanto la otra instancia
+atiende todo el tráfico, así
 no hay caída. La prueba de humo verifica que **todas** las instancias responden el commit nuevo."
 
 🖥️ (10 s) Navegador en la URL del ALB: **"- v3"** y la versión = hash del commit.

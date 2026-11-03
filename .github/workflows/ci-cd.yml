@@ -2,7 +2,7 @@
 #
 #   1. Validacion de codigo y pruebas  -> ruff + pytest (unitarias e integracion con PostgreSQL)
 #   2. Validacion de infraestructura   -> terraform fmt + init + validate
-#   3. Despliegue en AWS               -> rolling update del Auto Scaling Group + prueba de humo
+#   3. Despliegue en AWS               -> rolling update del ASG (una instancia a la vez) + prueba de humo
 #
 # Credenciales: secretos del repositorio (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
 # AWS_SESSION_TOKEN). Datos no sensibles: variables (AWS_REGION, ASG_NAME, ALB_URL).
@@ -158,26 +158,38 @@ jobs:
       - name: Version antes del despliegue
         run: curl -fsS "$ALB_URL/api/info" && echo
 
-      - name: Rolling update del Auto Scaling Group (instance refresh)
+      # Reemplazo gradual (rolling) sin caida: se reemplaza UNA instancia a la vez y se
+      # espera a que la nueva (que clona el commit actual al arrancar) este sana en el ALB
+      # antes de seguir. Se implementa a mano porque la SCP del AWS Academy Learner Lab
+      # niega autoscaling:StartInstanceRefresh.
+      - name: Rolling update del Auto Scaling Group (una instancia a la vez)
         run: |
-          REFRESH_ID=$(aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name "$ASG_NAME" \
-            --preferences '{"MinHealthyPercentage":50,"InstanceWarmup":60}' \
-            --query InstanceRefreshId --output text)
-          echo "Instance refresh: $REFRESH_ID"
-          for i in $(seq 1 60); do
-            read -r STATUS PERCENT <<< "$(aws autoscaling describe-instance-refreshes \
-              --auto-scaling-group-name "$ASG_NAME" --instance-refresh-ids "$REFRESH_ID" \
-              --query 'InstanceRefreshes[0].[Status,PercentageComplete]' --output text)"
-            echo "$(date +%T)  estado=$STATUS  avance=$PERCENT%"
-            case "$STATUS" in
-              Successful) exit 0 ;;
-              Failed|Cancelled|RollbackSuccessful|RollbackFailed) exit 1 ;;
-            esac
-            sleep 20
+          read -r DESIRED TG_ARN <<< "$(aws autoscaling describe-auto-scaling-groups \
+            --auto-scaling-group-names "$ASG_NAME" \
+            --query 'AutoScalingGroups[0].[DesiredCapacity,TargetGroupARNs[0]]' --output text)"
+          OLD_INSTANCES=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG_NAME" \
+            --query "AutoScalingGroups[0].Instances[?LifecycleState=='InService'].InstanceId" --output text)
+          echo "Capacidad deseada: $DESIRED | instancias a reemplazar: $OLD_INSTANCES"
+          for OLD in $OLD_INSTANCES; do
+            echo "::group::Reemplazando $OLD"
+            aws autoscaling terminate-instance-in-auto-scaling-group --instance-id "$OLD" \
+              --no-should-decrement-desired-capacity --query 'Activity.Description' --output text
+            HEALTHY=0
+            for i in $(seq 1 40); do
+              sleep 15
+              HEALTHY=$(aws elbv2 describe-target-health --target-group-arn "$TG_ARN" \
+                --query "length(TargetHealthDescriptions[?TargetHealth.State=='healthy' && Target.Id!='$OLD'])" \
+                --output text)
+              echo "$(date +%T)  instancias sanas sin $OLD: $HEALTHY de $DESIRED"
+              [ "$HEALTHY" -ge "$DESIRED" ] && break
+            done
+            echo "::endgroup::"
+            if [ "$HEALTHY" -lt "$DESIRED" ]; then
+              echo "::error::El reemplazo de $OLD no quedo sano en 10 minutos"
+              exit 1
+            fi
           done
-          echo "::error::El instance refresh no termino en 20 minutos"
-          exit 1
+          echo "Rolling update completado: $DESIRED instancias nuevas y sanas"
 
       - name: Prueba de humo (version nueva en todas las instancias)
         run: |
