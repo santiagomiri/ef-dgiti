@@ -2,7 +2,8 @@
 
 Ejecutada el 3 de noviembre de 2026 (15:00–15:10, hora de Colombia) contra el ALB desplegado en la cuenta de AWS
 Academy Learner Lab, con `.\scripts\prueba-carga.ps1` (perfil `estres`: rampa de 0 a 200 usuarios virtuales y
-meseta, ~10,5 minutos). Reportes completos en `load-tests/resultados/` (resumen de k6 y reporte HTML del dashboard).
+meseta, ~10,5 minutos). Evidencia en el repositorio: [`docs/evidencias/reporte-k6-estres-referencia.html`](../docs/evidencias/reporte-k6-estres-referencia.html)
+(dashboard de k6 exportado) y [`docs/evidencias/resumen-k6-estres-referencia.txt`](../docs/evidencias/resumen-k6-estres-referencia.txt).
 
 ## Resumen de k6
 

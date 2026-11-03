@@ -1,0 +1,72 @@
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<2000' p(95)=840.75ms
+
+      {endpoint:compute}
+      ✓ 'p(95)<3000' p(95)=858.14ms
+
+      {endpoint:info}
+      ✓ 'p(95)<1500' p(95)=764.75ms
+
+      {endpoint:items}
+      ✓ 'p(95)<2000' p(95)=910.93ms
+
+    http_req_failed
+    ✓ 'rate<0.05' rate=0.02%
+
+    respuestas_por_instancia{instancia:i-09f955da0a1a67b21}
+    ✓ 'count>0' count=47953
+
+    respuestas_por_instancia{instancia:i-0ec937873b777c6b1}
+    ✓ 'count>0' count=47938
+
+    respuestas_por_zona{zona:us-east-1a}
+    ✓ 'count>0' count=62403
+
+    respuestas_por_zona{zona:us-east-1b}
+    ✓ 'count>0' count=63305
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 251470 398.952388/s
+    checks_succeeded...: 99.97% 251416 out of 251470
+    checks_failed......: 0.02%  54 out of 251470
+
+    ✗ status 200
+      ↳  99% — ✓ 125708 / ✗ 27
+    ✗ responde una instancia
+      ↳  99% — ✓ 125708 / ✗ 27
+
+    CUSTOM
+    respuestas_por_instancia..............: 125708 199.433359/s
+      { instancia:i-09f955da0a1a67b21 }...: 47953  76.076525/s
+      { instancia:i-0ec937873b777c6b1 }...: 47938  76.052728/s
+    respuestas_por_zona...................: 125708 199.433359/s
+      { zona:us-east-1a }.................: 62403  99.001177/s
+      { zona:us-east-1b }.................: 63305  100.432182/s
+    tiempo_cpu_servidor...................: avg=65.67ms  min=13.3ms   med=33.72ms  p(90)=159.39ms p(95)=221.36ms p(99)=362.24ms max=1.11s
+
+    HTTP
+    http_req_duration.....................: avg=284.29ms min=77.63ms  med=154.56ms p(90)=718.83ms p(95)=840.75ms p(99)=1.02s    max=3.53s
+      { endpoint:compute }................: avg=303.12ms min=91.71ms  med=166.94ms p(90)=741.67ms p(95)=858.14ms p(99)=1.03s    max=3.39s
+      { endpoint:info }...................: avg=242.99ms min=77.63ms  med=129.39ms p(90)=632.91ms p(95)=764.75ms p(99)=947.81ms max=3.15s
+      { endpoint:items }..................: avg=294.98ms min=80.12ms  med=135.55ms p(90)=797.01ms p(95)=910.93ms p(99)=1.07s    max=3.53s
+      { expected_response:true }..........: avg=284.3ms  min=77.63ms  med=154.55ms p(90)=718.9ms  p(95)=840.76ms p(99)=1.02s    max=3.53s
+    http_req_failed.......................: 0.02%  27 out of 125736
+    http_reqs.............................: 125736 199.477781/s
+
+    EXECUTION
+    iteration_duration....................: avg=784.79ms min=577.76ms med=655.11ms p(90)=1.21s    p(95)=1.34s    p(99)=1.52s    max=4.03s
+    iterations............................: 125735 199.476194/s
+    vus...................................: 3      min=0            max=200
+    vus_max...............................: 200    min=200          max=200
+
+    NETWORK
+    data_received.........................: 40 MB  64 kB/s
+    data_sent.............................: 15 MB  24 kB/s
+
+
+
+

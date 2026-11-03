@@ -53,7 +53,7 @@ minuto del video se evidencia. Ruta de archivos relativa a la raíz del reposito
 | Porcentaje de errores | `http_req_failed` con umbral < 5 % | Clip 5: resumen |
 | Evidencia de saturación o comportamiento bajo carga | Endpoint `/api/compute` satura CPU → p95 sube → alarma de escalado → ASG de 2 a 4 | Clip 5: CloudWatch (CPU, latencia, instancias) |
 | **Ver la operación del balanceador** | `respuestas_por_instancia{instancia:i-...}` y `respuestas_por_zona`; Target Group con instancias nuevas *healthy*; `RequestCountPerTarget` | Clip 5: resumen k6 + consola EC2 Target Groups |
-| Relacionar los resultados con la infraestructura | Conclusión: capacidad de 2 × t3.micro, umbral de CPU 50 %, tiempo de reacción del escalado, BD no fue cuello de botella | Clip 5: conclusión |
+| Relacionar los resultados con la infraestructura | Prueba de referencia documentada en `load-tests/RESULTADOS.md`: con 2 instancias CPU 87 % y p95 ~870 ms; el ASG escaló a 4 y atendió 60 % más tráfico con p95 ~100 ms; RDS < 9 % de CPU. Evidencia: `docs/evidencias/` | Clip 5: conclusión |
 
 ## 6. Diagrama (`docs/arquitectura.png`, editable `docs/arquitectura.drawio`)
 

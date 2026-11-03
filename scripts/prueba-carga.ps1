@@ -10,6 +10,9 @@ param(
     [int]$Iteraciones = 20000
 )
 
+# k6 escribe en UTF-8: sin esto PowerShell 5.1 muestra los simbolos como "Ô£ô"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 $raiz = Split-Path $PSScriptRoot -Parent
 Set-Location $raiz
 $url = terraform -chdir=infra output -raw alb_url
