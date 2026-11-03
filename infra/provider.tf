@@ -19,7 +19,7 @@ terraform {
 }
 
 provider "aws" {
-  # Credenciales: las del Sandbox de AWS Academy en ~/.aws/credentials.
+  # Credenciales: las del Learner Lab de AWS Academy en ~/.aws/credentials.
   # Nunca se escriben en el codigo.
   region = var.aws_region
 

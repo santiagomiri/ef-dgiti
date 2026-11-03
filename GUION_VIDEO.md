@@ -3,7 +3,7 @@
 Cada bloque dice **qué se ve en pantalla** (🖥️) y **qué se dice** (🎙️). No hay que leerlo palabra por palabra:
 apréndanse las ideas y los números. Todo lo que se dice está respaldado por algo que se **ve** en pantalla.
 
-**Regla de oro de cada bloque (15 s, obligatoria):** 🖥️ Canvas → AWS Academy → Sandbox 🟢 con tu nombre →
+**Regla de oro de cada bloque (15 s, obligatoria):** 🖥️ Canvas → AWS Academy Learner Lab (tarjeta verde) 🟢 con tu nombre →
 consola AWS (esquina `voclabs/user...`) → `aws sts get-caller-identity` en PowerShell.
 🎙️ "Soy [nombre]. Esta es mi cuenta de AWS Academy, con la sesión activa, y aquí está desplegada nuestra infraestructura."
 

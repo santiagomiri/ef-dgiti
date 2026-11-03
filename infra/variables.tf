@@ -53,7 +53,7 @@ variable "db_subnet_cidrs" {
 }
 
 variable "enable_nat_gateway" {
-  description = "true = EC2 en subredes privadas con salida por NAT. false = EC2 en subredes publicas (plan B si el Sandbox no permite NAT); el SG igual solo acepta trafico del ALB"
+  description = "true = EC2 en subredes privadas con salida por NAT. false = EC2 en subredes publicas (plan B si el Learner Lab no permite NAT); el SG igual solo acepta trafico del ALB"
   type        = bool
   default     = true
 }
@@ -102,7 +102,7 @@ variable "cpu_target" {
 }
 
 variable "key_name" {
-  description = "Par de claves para SSH (opcional; en el Sandbox suele ser vockey). Vacio = sin SSH"
+  description = "Par de claves para SSH (opcional; en el Learner Lab suele ser vockey). Vacio = sin SSH"
   type        = string
   default     = ""
 }

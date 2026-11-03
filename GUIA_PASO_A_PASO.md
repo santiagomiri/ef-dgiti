@@ -74,7 +74,7 @@ Reparto según cuántos son:
 | Antes de las 8:00 | **Entregar** (no esperen al último minuto) | |
 | Después de entregar | `terraform destroy` en cada cuenta | Todos |
 
-> ⚠️ Las credenciales del Sandbox **cambian en cada sesión**. Si cierras el Sandbox o se acaba el tiempo,
+> ⚠️ Las credenciales del Learner Lab **cambian en cada sesión**. Si cierras el Learner Lab o se acaba el tiempo,
 > repite el **Paso B2** (credenciales) y, el dueño del repo, la **Fase C2** (secretos de GitHub).
 
 ---
@@ -136,18 +136,19 @@ Si alguien más del grupo hará commits, agrégalo en **Settings → Collaborato
 
 ## Fase B — Desplegar la infraestructura en TU cuenta (TODOS, ~35 min)
 
-### B1. Iniciar el Sandbox
-Canvas → AWS Academy → **Sandbox** → **Start Lab** → espera el círculo 🟢.
+### B1. Iniciar el Learner Lab
+Canvas → tarjeta verde **AWS Academy Learner Lab** (la del parcial, NO la morada de Cloud Foundations) → **Modules** → **Launch AWS Academy Learner Lab** → **Start Lab** → espera el círculo 🟢 junto a "AWS".
+> La sesión dura 4 h: al acabarse, AWS **detiene** las instancias (no las borra) y se reactivan con el siguiente **Start Lab**. El crédito del curso es limitado: no dejen la infraestructura viva más de lo necesario.
 
 ### B2. Credenciales en tu PC
 En PowerShell, desde la carpeta donde vas a trabajar:
 ```powershell
 cd "$HOME\Documents"
-git clone https://github.com/USUARIO_DEL_DUEÑO/ef-dgiti.git
+git clone https://github.com/santiagomiri/ef-dgiti.git
 cd ef-dgiti
 powershell -ExecutionPolicy Bypass -File .\scripts\credenciales.ps1
 ```
-La ventana queda esperando. **No la toques.** En el Sandbox: **AWS Details** → **AWS CLI: Show** → selecciona todo
+La ventana queda esperando. **No la toques.** En el Learner Lab: **AWS Details** → **AWS CLI: Show** → selecciona todo
 el bloque que empieza con `[default]` → clic derecho → **Copiar**. PowerShell dice **Credenciales guardadas** y
 muestra tu ARN (`...assumed-role/voclabs/user...`). 📸 `B2-credenciales.png`
 
@@ -160,7 +161,7 @@ copy terraform.tfvars.example terraform.tfvars
 notepad terraform.tfvars
 ```
 Cambia **solo** estas dos líneas, guarda y cierra:
-- `app_repo_url = "https://github.com/USUARIO_DEL_DUEÑO/ef-dgiti.git"` (el repo del grupo)
+- `app_repo_url = "https://github.com/santiagomiri/ef-dgiti.git"` (el repo del grupo)
 - `db_password = "..."` → inventa una de **12 a 40 letras y números, sin símbolos** (ej. `GrupoDgiti2026Final`).
 
 > `terraform.tfvars` está en `.gitignore`: **nunca** se sube a GitHub. Eso es lo que se explica en el video como
@@ -211,7 +212,7 @@ curl.exe -s "$url/api/status"
 > Si a los 10 min sigue igual → sección 11, problema 4.
 
 ### B6. Recorrido por la consola (cada uno practica lo que mostrará)
-Consola AWS (en el Sandbox, clic en **AWS** 🟢) → región **N. Virginia**:
+Consola AWS (en el Learner Lab, clic en **AWS** 🟢) → región **N. Virginia**:
 - **VPC → Your VPCs → `ef-dgiti-vpc` → pestaña Resource map** (excelente para el bloque A). 📸
 - **VPC → Security groups** → `ef-dgiti-sg-alb`, `-sg-app`, `-sg-db` → **Inbound rules**. 📸
 - **EC2 → Load Balancers → `ef-dgiti-alb`** y **Target groups → `ef-dgiti-tg` → Targets** (2 *healthy* en 2 zonas). 📸
@@ -239,7 +240,7 @@ Crea las 3, copiando los valores **sin comillas**:
 | `ASG_NAME` | `ef-dgiti-asg` |
 | `ALB_URL` | `http://ef-dgiti-alb-XXXX.us-east-1.elb.amazonaws.com` (sin `/` al final) |
 
-### C2. Secretos (credenciales del Sandbox) — **repetir cada vez que inicies una sesión nueva del Sandbox**
+### C2. Secretos (credenciales del Learner Lab) — **repetir cada vez que inicies una sesión nueva del Learner Lab**
 Pestaña **Secrets → New repository secret**. Para no mostrar las claves en pantalla, desde la raíz del repo:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\copiar-secretos.ps1
@@ -366,7 +367,7 @@ instancias en Auto Scaling Group, 3 Security Groups, RDS primaria + réplica, S3
 Alternativa: cada uno graba su bloque con OBS/Xbox Game Bar y se unen en **Clipchamp** (viene con Windows).
 
 ### F2. Antes de grabar (cada integrante)
-- [ ] Sandbox **iniciado** y con tiempo de sobra (si quedan < 60 min, **Start Lab** de nuevo y repite B2).
+- [ ] Learner Lab **iniciado** y con tiempo de sobra (si quedan < 60 min, **Start Lab** de nuevo y repite B2).
 - [ ] `.\scripts\verificar-todo.ps1` termina en **TODO LISTO** (incluye health, réplica, 2 zonas sanas y `plan` sin cambios).
 - [ ] `terraform plan` dice **No changes** (todo sigue desplegado). Si algo cambió, `terraform apply`.
 - [ ] El navegador con las pestañas del guion **ya abiertas** y con sesión iniciada en la consola.
@@ -377,7 +378,7 @@ Alternativa: cada uno graba su bloque con OBS/Xbox Game Bar y se unen en **Clipc
 
 ### F3. Al inicio de **cada** bloque (evidencia de la cuenta propia — obligatorio)
 1. Di tu nombre completo.
-2. Muestra **Canvas → AWS Academy → Sandbox** con tu nombre visible y el círculo 🟢.
+2. Muestra **Canvas → AWS Academy Learner Lab (tarjeta verde) → Launch AWS Academy Learner Lab** con tu nombre visible y el círculo 🟢.
 3. Abre la consola y señala la esquina superior derecha (`voclabs/user...`).
 4. En PowerShell: `aws sts get-caller-identity` (muestra tu cuenta).
 
@@ -400,10 +401,10 @@ Exporta en 1080p. Revisa el audio de cada persona.
 ```powershell
 terraform destroy
 ```
-Escribe `yes` (~15 min) → **Destroy complete!** 📸 Luego **End Lab** en el Sandbox.
+Escribe `yes` (~15 min) → **Destroy complete!** 📸 Luego **End Lab** en el Learner Lab.
 
 > Si te sobra tiempo, no destruyas hasta que salga la nota: el profe podría pedir revisar algo.
-> Pero el NAT Gateway, el ALB y RDS consumen crédito del Sandbox (~USD 2–3 por día por cuenta).
+> Pero el NAT Gateway, el ALB y RDS consumen crédito del Learner Lab (~USD 2–3 por día por cuenta).
 
 ---
 
@@ -462,12 +463,12 @@ caería por completo. La BD se revisa en `/api/status`.
 Si la réplica falla, la app lee de la primaria (`"read_from": "primary (respaldo)"`).
 
 **¿Réplica vs. Multi-AZ?** Multi-AZ es un standby síncrono que no atiende lecturas (failover automático);
-la réplica es asíncrona y sí atiende lecturas. Dejamos `db_multi_az` como variable (apagada por costo/tiempo del Sandbox).
+la réplica es asíncrona y sí atiende lecturas. Dejamos `db_multi_az` como variable (apagada por costo/tiempo del Learner Lab).
 
 **¿Por qué un solo NAT Gateway?** Costo. Solo afecta la salida a Internet de las instancias (instalación), no el
 tráfico de usuarios. En producción: uno por AZ.
 
-**¿Por qué no HTTPS?** Requiere un dominio propio y un certificado en ACM; el Sandbox no da dominio. Sería agregar
+**¿Por qué no HTTPS?** Requiere un dominio propio y un certificado en ACM; el Learner Lab no da dominio. Sería agregar
 un listener 443 con el certificado y redirigir 80 → 443.
 
 **¿Cómo se manejan los secretos?** Contraseña de la BD solo en `terraform.tfvars` (en `.gitignore`) y marcada
@@ -484,7 +485,7 @@ instancia, espera que la nueva pase el health check y luego sigue. La prueba de 
 (caídas de BD, réplica caída, validaciones, pool agotado, IMDSv2). Integración (3): la API real contra
 PostgreSQL 16 en el runner. Cobertura ≈ 97 %.
 
-**¿Por qué t3.micro?** Suficiente para la carga del curso y permitida en el Sandbox; la elasticidad la da el ASG
+**¿Por qué t3.micro?** Suficiente para la carga del curso y permitida en el Learner Lab; la elasticidad la da el ASG
 (escalado horizontal) en vez de instancias grandes (vertical).
 
 **¿Qué es `user_data.sh`?** Script que corre al primer arranque: instala Python 3.11, clona el repo, crea el
