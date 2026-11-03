@@ -16,6 +16,23 @@ Así puedes repetir un bloque si te equivocas y **cortar las esperas** (desplieg
 - Letra grande en PowerShell (Ctrl + rueda del mouse), navegador al 125 %, notificaciones apagadas.
 - **Nunca** mostrar `terraform.tfvars`, `~\.aws\credentials` ni AWS Details con las claves.
 
+### Pestañas que debes tener abiertas antes de grabar (en este orden)
+
+| # | Pestaña | Enlace |
+|---|---|---|
+| 1 | Canvas → AWS Academy Learner Lab (tarjeta verde) → laboratorio con 🟢 | (desde Canvas) |
+| 2 | Consola AWS → VPC → **Resource map** de `ef-dgiti-vpc` | <https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:> |
+| 3 | Consola AWS → **Auto Scaling Groups** → `ef-dgiti-asg` | <https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#AutoScalingGroups:> |
+| 4 | Consola AWS → **Target groups** → `ef-dgiti-tg` → Targets | <https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#TargetGroups:> |
+| 5 | Consola AWS → **RDS** → Databases | <https://us-east-1.console.aws.amazon.com/rds/home?region=us-east-1#databases:> |
+| 6 | Consola AWS → **CloudWatch** → dashboard `ef-dgiti` (rango 1 h, refresco 10 s) | <https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards/dashboard/ef-dgiti> |
+| 7 | El servicio (URL del ALB) | `terraform -chdir=infra output -raw alb_url` |
+| 8 | Swagger del servicio | URL del ALB + `/docs` |
+| 9 | GitHub → **Actions** | <https://github.com/santiagomiri/ef-dgiti/actions> |
+| 10 | GitHub → **Settings → Secrets and variables → Actions** | <https://github.com/santiagomiri/ef-dgiti/settings/secrets/actions> |
+| 11 | VS Code (o el Explorador) con la carpeta del proyecto | `Documentos\EF-DGITI\ef-dgiti` |
+| 12 | PowerShell en la carpeta del proyecto, letra grande | — |
+
 | Clip | Bloque | Criterio (peso) | Duración |
 |---|---|---|---|
 | 1 | Intro + **A. Arquitectura** | 10 % | 0:00–1:30 |
