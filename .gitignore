@@ -1,0 +1,27 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform.tfvars
+crash.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+reports/
+
+# Resultados locales
+load-tests/resultados/
+scripts/recursos-resultado.txt
+
+# Sistema
+.DS_Store
+Thumbs.db

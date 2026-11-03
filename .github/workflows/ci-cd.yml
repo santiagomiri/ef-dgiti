@@ -1,0 +1,205 @@
+# Pipeline CI/CD - Evaluacion Final DGITI
+#
+#   1. Validacion de codigo y pruebas  -> ruff + pytest (unitarias e integracion con PostgreSQL)
+#   2. Validacion de infraestructura   -> terraform fmt + init + validate
+#   3. Despliegue en AWS               -> rolling update del Auto Scaling Group + prueba de humo
+#
+# Credenciales: secretos del repositorio (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+# AWS_SESSION_TOKEN). Datos no sensibles: variables (AWS_REGION, ASG_NAME, ALB_URL).
+
+name: CI-CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  calidad:
+    name: "1. Validacion de codigo y pruebas"
+    runs-on: ubuntu-latest
+
+    # PostgreSQL efimero para las pruebas de integracion (sin contrasena: solo existe en el runner)
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: appdb
+          POSTGRES_USER: app
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d appdb"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: app/requirements*.txt
+
+      - name: Instalar dependencias
+        run: pip install -r app/requirements-dev.txt
+
+      - name: Lint y formato (ruff)
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Pruebas unitarias
+        env:
+          INSTANCE_METADATA_DISABLED: "1"
+        run: >-
+          pytest -m "not integration" --cov=app --cov-report=term-missing
+          --junitxml=reports/unitarias.xml
+
+      - name: Pruebas de integracion (PostgreSQL real)
+        env:
+          INSTANCE_METADATA_DISABLED: "1"
+          DB_HOST: localhost
+          DB_REPLICA_HOST: localhost
+          DB_NAME: appdb
+          DB_USER: app
+          DB_PASSWORD: ""
+        run: >-
+          pytest -m integration --cov=app --cov-append --cov-report=term-missing
+          --cov-fail-under=85 --junitxml=reports/integracion.xml
+
+      - name: Resumen de pruebas
+        if: always()
+        run: python .github/scripts/resumen_pruebas.py reports/unitarias.xml reports/integracion.xml >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar reportes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-pruebas
+          path: reports/
+
+  terraform:
+    name: "2. Validacion de infraestructura (Terraform)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Verificar archivos requeridos
+        run: |
+          for f in provider.tf variables.tf main.tf outputs.tf terraform.tfvars.example user_data.sh; do
+            test -f "$f" || { echo "::error::Falta $f"; exit 1; }
+            echo "OK  $f"
+          done
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive -diff
+
+      - name: terraform init
+        run: terraform init -backend=false -input=false
+
+      - name: terraform validate
+        run: terraform validate
+
+  despliegue:
+    name: "3. Despliegue en AWS"
+    needs: [calidad, terraform]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: aws-academy
+      url: ${{ vars.ALB_URL }}
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+      ASG_NAME: ${{ vars.ASG_NAME }}
+      ALB_URL: ${{ vars.ALB_URL }}
+
+    steps:
+      - name: Verificar configuracion
+        run: |
+          if [ -z "$ASG_NAME" ] || [ -z "$ALB_URL" ]; then
+            echo "::error::Faltan las variables ASG_NAME y/o ALB_URL (Settings > Secrets and variables > Actions > Variables)"
+            exit 1
+          fi
+
+      - name: Credenciales de AWS (desde secretos)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Version antes del despliegue
+        run: curl -fsS "$ALB_URL/api/info" && echo
+
+      - name: Rolling update del Auto Scaling Group (instance refresh)
+        run: |
+          REFRESH_ID=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name "$ASG_NAME" \
+            --preferences '{"MinHealthyPercentage":50,"InstanceWarmup":60}' \
+            --query InstanceRefreshId --output text)
+          echo "Instance refresh: $REFRESH_ID"
+          for i in $(seq 1 60); do
+            read -r STATUS PERCENT <<< "$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name "$ASG_NAME" --instance-refresh-ids "$REFRESH_ID" \
+              --query 'InstanceRefreshes[0].[Status,PercentageComplete]' --output text)"
+            echo "$(date +%T)  estado=$STATUS  avance=$PERCENT%"
+            case "$STATUS" in
+              Successful) exit 0 ;;
+              Failed|Cancelled|RollbackSuccessful|RollbackFailed) exit 1 ;;
+            esac
+            sleep 20
+          done
+          echo "::error::El instance refresh no termino en 20 minutos"
+          exit 1
+
+      - name: Prueba de humo (version nueva en todas las instancias)
+        run: |
+          EXPECTED="${GITHUB_SHA::7}"
+          echo "Version esperada: $EXPECTED"
+          {
+            echo "## Despliegue verificado"
+            echo "ALB: $ALB_URL - version esperada \`$EXPECTED\`"
+            echo
+            echo "| # | Instancia | Zona | Version |"
+            echo "|---|-----------|------|---------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          curl -fsS "$ALB_URL/health" > /dev/null
+          for i in $(seq 1 12); do
+            LINE=$(curl -fsS "$ALB_URL/api/info" | python3 -c \
+              "import sys, json; d = json.load(sys.stdin); print(d['instance_id'], d['availability_zone'], d['version'])")
+            read -r INSTANCE AZ VERSION <<< "$LINE"
+            echo "$i  $INSTANCE  $AZ  $VERSION"
+            echo "| $i | $INSTANCE | $AZ | $VERSION |" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$VERSION" != "$EXPECTED" ]; then
+              echo "::error::La instancia $INSTANCE responde la version $VERSION (esperada $EXPECTED)"
+              exit 1
+            fi
+          done
+          curl -fsS "$ALB_URL/api/status" && echo
