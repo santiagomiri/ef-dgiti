@@ -87,7 +87,7 @@ def home() -> str:
  .ok{{display:inline-block;background:#1d8102;color:#fff;padding:2px 10px;border-radius:12px}}
  a{{color:#0972d3;margin-right:16px}}
 </style></head><body>
-<h1>Evaluacion Final DGITI</h1>
+<h1>Evaluacion Final DGITI - v3</h1>
 <p>Servicio en AWS detras de un Application Load Balancer <span class="ok">en linea</span></p>
 <table>{table}</table>
 <p>Recarga la pagina (F5): el balanceador alterna entre instancias.</p>
